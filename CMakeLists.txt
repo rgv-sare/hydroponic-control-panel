@@ -2,13 +2,15 @@ cmake_minimum_required(VERSION 3.2)
 
 project(hyrdoponic-control-panel)
 
+add_subdirectory("dep/glfw")
+
 add_executable(${PROJECT_NAME}
     main.cpp
 )
 
-#target_link_libraries({${PROJECT_NAME}} PRIVATE
-#    
-#)
+target_link_libraries(${PROJECT_NAME}
+    glfw
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include

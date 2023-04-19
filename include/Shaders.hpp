@@ -20,6 +20,7 @@ public:
     static void POS_UV_COLOR();
     static void POS_COLOR();
     static void POS_UV_COLOR_TEXID();
+    static void UI();
 };
 
 #endif // HCP_SHADERS_HPP

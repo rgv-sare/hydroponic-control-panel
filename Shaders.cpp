@@ -18,7 +18,7 @@ static glm::vec4 i_color = glm::vec4(1.0f);
 
 static void i_initShaders();
 
-static class BasicShader
+class BasicShader
 {
 public:
     BasicShader(const char* vertexShaderSource, const char* fragmentShaderSource)
@@ -33,6 +33,7 @@ public:
     GLuint u_modelViewMatrix;
     GLuint u_color;
     GLuint u_textures;
+    GLuint u_maxTextures;
     bool hasInit;
 
     void init()
@@ -80,6 +81,7 @@ public:
         u_modelViewMatrix = glGetUniformLocation(programID, "u_modelViewMatrix");
         u_color = glGetUniformLocation(programID, "u_color");
         u_textures = glGetUniformLocation(programID, "u_textures");
+        u_maxTextures = glGetUniformLocation(programID, "u_maxTextures");
 
         hasInit = true;
     }
@@ -98,6 +100,7 @@ public:
         glUniformMatrix4fv(u_modelViewMatrix, 1, GL_FALSE, &i_modelViewMatrix[0][0]);
         glUniform4fv(u_color, 1, &i_color[0]);
         glUniform1iv(u_textures, i_maxTextureUnits, i_texutreUnits);
+        glUniform1i(u_maxTextures, i_maxTextureUnits);
     }
 private:
     const char* vertexShaderSource;
@@ -108,6 +111,7 @@ static BasicShader i_POS_SHADER(POS_SHADER_vcode, POS_SHADER_fcode);
 static BasicShader i_POS_UV_SHADER(POS_UV_SHADER_vcode, POS_UV_SHADER_fcode);
 static BasicShader i_POS_COLOR_SHADER(POS_COLOR_SHADER_vcode, POS_COLOR_SHADER_fcode);
 static BasicShader i_POS_UV_COLOR_TEXID_SHADER(POS_UV_COLOR_TEXID_SHADER_vcode, POS_UV_COLOR_TEXID_SHADER_fcode);
+static BasicShader i_UI_SHADER(UI_SHADER_vcode, UI_SHADER_fcode);
 
 void HCPShaders::setProjectionMatrix(const glm::mat4& proj)
 {
@@ -162,6 +166,11 @@ void HCPShaders::POS_COLOR()
 void HCPShaders::POS_UV_COLOR_TEXID()
 {
     i_POS_UV_COLOR_TEXID_SHADER.use();
+}
+
+void HCPShaders::UI()
+{
+    i_UI_SHADER.use();
 }
 
 static void i_initShaders()

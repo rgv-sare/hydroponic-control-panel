@@ -11,12 +11,12 @@ void HCPVertexFormat::apply() const
     {
         HCPVertexAttribute attrib = attributes[i];
         uint32_t a_numBytes = attrib.numBytes();
-        uint32_t a_apiType = attrib.getAPIType();
+        uint32_t a_glType = attrib.getAPIType();
         uint32_t a_size = attrib.getSize();
-        bool a_normalized = attrib.isNormalized();
+        bool normalized = attrib.isNormalized();
 
         glEnableVertexAttribArray(i);
-        glVertexAttribPointer(i, a_size, a_apiType, a_normalized, stride, (void*) pointer);
+        glVertexAttribPointer(i, a_size, a_glType, normalized, stride, (void*) pointer);
         pointer += a_numBytes;
     }
 }
@@ -30,7 +30,7 @@ void HCPVertexFormat::unapply() const
 }
 
 HCPMeshBuilder::HCPMeshBuilder(const HCPVertexFormat& vtxFmt) :
-    defaultNormal{0.0, 1.0f, 0.0f},
+    defaultNormal{0.0f, 1.0f, 0.0f},
     defaultUV{0.0f, 0.0f},
     defaultColor{1.0f, 1.0f, 1.0f, 1.0f},
     m_vertexFormat(vtxFmt),
@@ -77,7 +77,7 @@ void HCPMeshBuilder::drawElements(GLenum mode)
 void HCPMeshBuilder::drawArraysInstanced(GLenum mode, int instances)
 {
     if(!m_isRenderable) initForRendering();
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, m_glVBO);
 
     if(m_vertexDataBuffer.capacity() <= m_glVertexBufferSize)
@@ -98,7 +98,7 @@ void HCPMeshBuilder::drawArraysInstanced(GLenum mode, int instances)
 void HCPMeshBuilder::drawElementsInstanced(GLenum mode, int instances)
 {
     if(!m_isRenderable) initForRendering();
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, m_glVBO);
 
     if(m_vertexDataBuffer.capacity() <= m_glVertexBufferSize)
@@ -124,7 +124,7 @@ void HCPMeshBuilder::drawElementsInstanced(GLenum mode, int instances)
     }
 
     glBindVertexArray(m_glVAO);
-    glDrawArraysInstanced(mode, 0, (GLsizei) m_numVerticies, instances);
+    glDrawElementsInstanced(mode, (GLsizei) m_numIndicies, GL_UNSIGNED_INT, 0, instances);
     glBindVertexArray(0);
 }
 

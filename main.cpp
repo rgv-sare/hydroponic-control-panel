@@ -8,6 +8,7 @@
 #include <Logger.hpp>
 #include <Inputs.hpp>
 #include <MeshBuilder.hpp>
+#include <Shaders.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -40,6 +41,9 @@ int main()
         else glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT);
+
+        HCPShaders::setColor(1.0f, 0.0f, 0.0f, 1.0f);
+        HCPShaders::POS();
 
         meshBuilder.reset();
         meshBuilder.position(-0.5f, -0.5f, 0.0f);

@@ -10,6 +10,7 @@
 #include <MeshBuilder.hpp>
 #include <Shaders.hpp>
 #include <UIRender.hpp>
+#include <Button.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -24,13 +25,8 @@ int main()
     mainLogger.infof("Loading OpenGL");
     HCPUIRender::init(window);
 
-    // Create mesh builder
-    HCPVertexFormat vtxFmt;
-    vtxFmt.size = 1;
-    vtxFmt[0].data = HCPVF_ATTRB_USAGE_POS
-                   | HCPVF_ATTRB_TYPE_FLOAT
-                   | HCPVF_ATTRB_SIZE(3)
-                   | HCPVF_ATTRB_NORMALIZED_FALSE;
+    // Create a button
+    HCPButton button("Le Button");
 
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
@@ -43,8 +39,11 @@ int main()
         HCPUIRender::setupUIRendering();
         HCPUIRender::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
         HCPUIRender::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
-        HCPUIRender::genString("Wass§6up", 0, 0, 30, 0xFFFFFFFF);
+        HCPUIRender::genString("§0Wass§6up", 0, 0, 30, 0xFFFFFFFF);
+        button.draw();
         HCPUIRender::renderBatch();
+
+        if(button.isPressed()) mainLogger.infof("Button Pressed");
 
         HCPInputs::update();
         glfwPollEvents();

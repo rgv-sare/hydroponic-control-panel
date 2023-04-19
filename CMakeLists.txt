@@ -14,6 +14,8 @@ add_executable(${PROJECT_NAME}
     UIRender.cpp
     FontRenderer.cpp
     stb_image.c
+    Widget.cpp
+    Button.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -7,6 +7,7 @@
 
 #include <Logger.hpp>
 #include <Inputs.hpp>
+#include <MeshBuilder.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -22,6 +23,16 @@ int main()
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+    // Create mesh builder
+    HCPVertexFormat vtxFmt;
+    vtxFmt.size = 1;
+    vtxFmt[0].data = HCPVF_ATTRB_USAGE_POS
+                   | HCPVF_ATTRB_TYPE_FLOAT
+                   | HCPVF_ATTRB_SIZE(3)
+                   | HCPVF_ATTRB_NORMALIZED_FALSE;
+
+    HCPMeshBuilder meshBuilder(vtxFmt);
+
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
@@ -30,6 +41,14 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT);
 
+        meshBuilder.reset();
+        meshBuilder.position(-0.5f, -0.5f, 0.0f);
+        meshBuilder.position( 0.5f, -0.5f, 0.0f);
+        meshBuilder.position( 0.0f, 0.5f, 0.0f);
+        
+        meshBuilder.drawArrays(GL_TRIANGLES);
+
+        HCPInputs::update();
         glfwPollEvents();
         glfwSwapBuffers(window);
     }

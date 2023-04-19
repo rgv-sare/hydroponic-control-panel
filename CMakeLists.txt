@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME}
     main.cpp
     Logger.cpp
     Inputs.cpp
+    MeshBuilder.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

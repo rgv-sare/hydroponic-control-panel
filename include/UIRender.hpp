@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "FontRenderer.hpp"
+#include "Inputs.hpp"
 
 enum HCPDirection
 {
@@ -20,18 +21,20 @@ class HCPUIRender
 {
 public:
     static void init(GLFWwindow* window);
+    
+    static HCPInputContext* getInputContext();
 
     static void setupUIRendering();
 
-    static void genQuad(float left, float top, float right, float bottom, uint32_t color, int texID);
-    static void genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, uint32_t color1, uint32_t color2, int texID);
+    static void genQuad(float left, float top, float right, float bottom, uint32_t color, int texID = 0);
+    static void genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, uint32_t color1, uint32_t color2, int texID = 0);
     static void genVerticalLine(float x, float top, float bottom, uint32_t color, float width = 1.0f);
     static void genHorizontalLine(float y, float left, float right, uint32_t color, float width = 1.0f);
     static void genString(HCPAlignment alignment, const char* str, float x, float y, float scale, uint32_t color);
     static void genString(const char* str, float x, float y, float scale, uint32_t color);
 
-    static void genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID);
-    static void genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID);
+    static void genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID = 0);
+    static void genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID = 0);
     static void genVerticalLine(float x, float top, float bottom, const glm::vec4& color, float width = 1.0f);
     static void genHorizontalLine(float y, float left, float right, const glm::vec4& color, float width = 1.0f);
     static void genString(HCPAlignment alignment, const char* str, float x, float y, float scale,  const glm::vec4& color);
@@ -40,14 +43,16 @@ public:
     static void renderBatch();
 
     static float getStringwidth(const char* str, float scale);
-    static float getCharWidth(int unicode, float scale);
 
-    static int getwindowWidth();
-    static int getwindowHeight();
+    static int getWindowWidth();
+    static int getWindowHeight();
 
     static float getUIWidth();
     static float getUIHeight();
     static float getUIScale();
+
+    static float getUICursorX();
+    static float getUICursorY();
 
     static void pushStack();
     static void popStack();
@@ -56,7 +61,7 @@ public:
     static void rotate(float angle);
     static void multiplyMatrix(const glm::mat4& matrix);
     static void setMatrix(const glm::mat4& matrix);
-    static void getModelViewMatrix(glm::mat4& matrix);
+    static glm::mat4& getModelViewMatrix();
 };
 
 #endif // HCP_UIRENDER_HPP

@@ -14,6 +14,7 @@ static HCPMeshBuilder* i_batchMeshBuilder = nullptr;
 
 // Window bookkeeping
 static GLFWwindow* i_window = nullptr;
+static HCPInputContext* i_inputContext = nullptr;
 static int i_windowWidth = 0;
 static int i_windowHeight = 0;
 static float i_uiScale = 1.0f;
@@ -39,6 +40,8 @@ void HCPUIRender::init(GLFWwindow* window)
         glfwSetWindowSizeCallback(i_window, i_resizeCallback);
         glfwGetWindowSize(i_window, &i_windowWidth, &i_windowHeight);
 
+
+        i_inputContext = HCPInputs::get(i_window);
         i_init();
     }
     else if(previousWindow)
@@ -46,6 +49,11 @@ void HCPUIRender::init(GLFWwindow* window)
         glfwSetWindowSizeCallback(previousWindow, nullptr);
         i_windowWidth = i_windowHeight = 0;
     }
+}
+
+HCPInputContext* HCPUIRender::getInputContext()
+{
+    return i_inputContext;
 }
 
 void HCPUIRender::setupUIRendering()
@@ -169,6 +177,92 @@ void HCPUIRender::renderBatch()
 
     i_batchMeshBuilder->drawElements(GL_TRIANGLES);
     i_batchMeshBuilder->reset();
+}
+
+float HCPUIRender::getStringwidth(const char* str, float scale)
+{
+    return i_fontRenderer.getStringWidth(str, scale);
+}
+
+int HCPUIRender::getWindowWidth()
+{
+    return i_windowWidth;
+}
+
+int HCPUIRender::getWindowHeight()
+{
+    return i_windowHeight;
+}
+
+float HCPUIRender::getUIWidth()
+{
+    return i_windowWidth / i_uiScale;
+}
+
+float HCPUIRender::getUIHeight()
+{
+    return i_windowHeight / i_uiScale;
+}
+
+float HCPUIRender::getUIScale()
+{
+    return i_uiScale;
+}
+
+float HCPUIRender::getUICursorX()
+{
+    return i_inputContext->cursorX() / i_uiScale;
+}
+
+float HCPUIRender::getUICursorY()
+{
+    return i_inputContext->cursorY() / i_uiScale;
+}
+
+void HCPUIRender::pushStack()
+{
+    i_batchMeshBuilder->pushMatrix();
+}
+
+void HCPUIRender::popStack()
+{
+    i_batchMeshBuilder->popMatrix();
+}
+
+void HCPUIRender::translate(float x, float y)
+{
+    glm::mat4& mat = i_batchMeshBuilder->getModelView();
+
+    mat = glm::translate(mat, glm::vec3(x, y, 0.0f));
+}
+
+void HCPUIRender::scale(float x, float y)
+{
+    glm::mat4& mat = i_batchMeshBuilder->getModelView();
+
+    mat = glm::scale(mat, glm::vec3(x, y, 1.0f));
+}
+
+void HCPUIRender::rotate(float angle)
+{
+    glm::mat4& mat = i_batchMeshBuilder->getModelView();
+
+    mat = glm::rotate(mat, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void HCPUIRender::multiplyMatrix(const glm::mat4& mat)
+{
+    i_batchMeshBuilder->getModelView() *= mat;
+}
+
+void HCPUIRender::setMatrix(const glm::mat4& mat)
+{
+    i_batchMeshBuilder->getModelView() = mat;
+}
+
+glm::mat4& HCPUIRender::getModelViewMatrix()
+{
+    return i_batchMeshBuilder->getModelView();
 }
 
 static inline void i_orientGradientQuad(float* dst, HCPDirection dir, float left, float top, float right, float bottom)

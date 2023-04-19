@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
     Inputs.cpp
     MeshBuilder.cpp
     Shaders.cpp
+    UIRender.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

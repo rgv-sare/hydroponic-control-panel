@@ -9,6 +9,7 @@
 #include <Inputs.hpp>
 #include <MeshBuilder.hpp>
 #include <Shaders.hpp>
+#include <UIRender.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -21,8 +22,7 @@ int main()
     HCPInputContext* input = HCPInputs::registerWindow(window);
 
     mainLogger.infof("Loading OpenGL");
-    glfwMakeContextCurrent(window);
-    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+    HCPUIRender::init(window);
 
     // Create mesh builder
     HCPVertexFormat vtxFmt;
@@ -32,8 +32,6 @@ int main()
                    | HCPVF_ATTRB_SIZE(3)
                    | HCPVF_ATTRB_NORMALIZED_FALSE;
 
-    HCPMeshBuilder meshBuilder(vtxFmt);
-
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
@@ -42,15 +40,10 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        HCPShaders::setColor(1.0f, 0.0f, 0.0f, 1.0f);
-        HCPShaders::POS();
-
-        meshBuilder.reset();
-        meshBuilder.position(-0.5f, -0.5f, 0.0f);
-        meshBuilder.position( 0.5f, -0.5f, 0.0f);
-        meshBuilder.position( 0.0f, 0.5f, 0.0f);
-        
-        meshBuilder.drawArrays(GL_TRIANGLES);
+        HCPUIRender::setupUIRendering();
+        HCPUIRender::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
+        HCPUIRender::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
+        HCPUIRender::renderBatch();
 
         HCPInputs::update();
         glfwPollEvents();

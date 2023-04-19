@@ -7,6 +7,7 @@ add_subdirectory("dep/glfw")
 
 add_executable(${PROJECT_NAME}
     main.cpp
+    Logger.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

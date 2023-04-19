@@ -43,6 +43,7 @@ int main()
         HCPUIRender::setupUIRendering();
         HCPUIRender::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
         HCPUIRender::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
+        HCPUIRender::genString("Wass§6up", 0, 0, 30, 0xFFFFFFFF);
         HCPUIRender::renderBatch();
 
         HCPInputs::update();

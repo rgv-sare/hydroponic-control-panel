@@ -12,6 +12,8 @@ add_executable(${PROJECT_NAME}
     MeshBuilder.cpp
     Shaders.cpp
     UIRender.cpp
+    FontRenderer.cpp
+    stb_image.c
 )
 
 target_link_libraries(${PROJECT_NAME}

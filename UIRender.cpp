@@ -2,6 +2,7 @@
 
 #include <Shaders.hpp>
 #include <MeshBuilder.hpp>
+#include <Logger.hpp>
 
 #include <glm/gtc/matrix_transform.hpp> 
 
@@ -16,6 +17,13 @@ static GLFWwindow* i_window = nullptr;
 static int i_windowWidth = 0;
 static int i_windowHeight = 0;
 static float i_uiScale = 1.0f;
+
+// UIRender Logging
+static HCPLogger i_logger("UIRender");
+
+// Font Rendering
+static HCPFontRenderer i_fontRenderer;
+static int i_fontAtlasTexUnit = 0;
 
 static inline void i_orientGradientQuad(float* dst, HCPDirection dir, float left, float top, float right, float bottom);
 static void i_resizeCallback(GLFWwindow* window, int width, int height);
@@ -54,12 +62,7 @@ void HCPUIRender::genQuad(float left, float top, float right, float bottom, uint
 {
     glm::vec4 colorVec = getVec4Color(color);
 
-    i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
-
-    i_batchMeshBuilder->vertex(NULL,  left, bottom, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), texID);
-    i_batchMeshBuilder->vertex(NULL, right, bottom, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), texID);
-    i_batchMeshBuilder->vertex(NULL, right,    top, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), texID);
-    i_batchMeshBuilder->vertex(NULL,  left,    top, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), texID);
+    genQuad(left, top, right, bottom, colorVec, texID);
 }
 
 void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, uint32_t color1, uint32_t color2, int texID)
@@ -67,47 +70,102 @@ void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top,
     glm::vec4 colorVec1 = getVec4Color(color1);
     glm::vec4 colorVec2 = getVec4Color(color2);
 
+    genGradientQuad(direction, left, top, right, bottom, colorVec1, colorVec2, texID);
+}
+
+void HCPUIRender::genVerticalLine(float x, float top, float bottom, uint32_t color, float width)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genVerticalLine(x, top, bottom, colorVec, width);
+}
+
+void HCPUIRender::genHorizontalLine(float y, float left, float right, uint32_t color, float width)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genHorizontalLine(y, left, right, colorVec, width);
+}
+
+void HCPUIRender::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, uint32_t color)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genString(alignment, str, x, y, scale, colorVec);
+}
+
+void HCPUIRender::genString(const char* str, float x, float y, float scale, uint32_t color)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genString(HCPAlignment::TOP_LEFT, str, x, y, scale, colorVec);
+}
+
+void HCPUIRender::genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID)
+{
+    i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
+
+    i_batchMeshBuilder->vertex(NULL,  left, bottom, 0.0f, 0.0f, 0.0f, vec4Color(color), texID);
+    i_batchMeshBuilder->vertex(NULL, right, bottom, 0.0f, 0.0f, 0.0f, vec4Color(color), texID);
+    i_batchMeshBuilder->vertex(NULL, right,    top, 0.0f, 0.0f, 0.0f, vec4Color(color), texID);
+    i_batchMeshBuilder->vertex(NULL,  left,    top, 0.0f, 0.0f, 0.0f, vec4Color(color), texID);
+}
+
+void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID)
+{
     float positions[8];
     i_orientGradientQuad(positions, direction, left, top, right, bottom);
 
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
-    i_batchMeshBuilder->vertex(NULL, positions[0], positions[1], 0.0f, 0.0f, 0.0f, vec4Color(colorVec2), texID);
-    i_batchMeshBuilder->vertex(NULL, positions[2], positions[3], 0.0f, 0.0f, 0.0f, vec4Color(colorVec2), texID);
-    i_batchMeshBuilder->vertex(NULL, positions[4], positions[5], 0.0f, 0.0f, 0.0f, vec4Color(colorVec1), texID);
-    i_batchMeshBuilder->vertex(NULL, positions[6], positions[7], 0.0f, 0.0f, 0.0f, vec4Color(colorVec1), texID);
+    i_batchMeshBuilder->vertex(NULL, positions[0], positions[1], 0.0f, 0.0f, 0.0f, vec4Color(color2), texID);
+    i_batchMeshBuilder->vertex(NULL, positions[2], positions[3], 0.0f, 0.0f, 0.0f, vec4Color(color2), texID);
+    i_batchMeshBuilder->vertex(NULL, positions[4], positions[5], 0.0f, 0.0f, 0.0f, vec4Color(color1), texID);
+    i_batchMeshBuilder->vertex(NULL, positions[6], positions[7], 0.0f, 0.0f, 0.0f, vec4Color(color1), texID);
 }
 
-void HCPUIRender::genVerticalLine(float x, float top, float bottom, uint32_t color)
+void HCPUIRender::genVerticalLine(float x, float top, float bottom, const glm::vec4& color, float width)
 {
-    glm::vec4 colorVec = getVec4Color(color);
-
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
-    i_batchMeshBuilder->vertex(NULL, x, bottom, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, x,    top, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, x,    top, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, x, bottom, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
+    i_batchMeshBuilder->vertex(NULL, x,         top,    0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, x,         bottom, 0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, x + width, bottom, 0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, x + width, top,    0.0f, 0.0f, 0.0f, vec4Color(color), 0);
 }
 
-void HCPUIRender::genHorizontalLine(float y, float left, float right, uint32_t color)
+void HCPUIRender::genHorizontalLine(float y, float left, float right, const glm::vec4& color, float width)
 {
-    glm::vec4 colorVec = getVec4Color(color);
-
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
-    i_batchMeshBuilder->vertex(NULL, left,  y, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, right, y, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, right, y, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
-    i_batchMeshBuilder->vertex(NULL, left,  y, 0.0f, 0.0f, 0.0f, vec4Color(colorVec), 0);
+    i_batchMeshBuilder->vertex(NULL, left,  y,          0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, right, y,          0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, right, y - width,  0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+    i_batchMeshBuilder->vertex(NULL, left,  y - width,  0.0f, 0.0f, 0.0f, vec4Color(color), 0);
+}
+
+void HCPUIRender::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, const glm::vec4& color)
+{
+    i_fontRenderer.setAnchor(alignment);
+    i_fontRenderer.setTextSize(scale);
+    i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
+}
+
+void HCPUIRender::genString(const char* str, float x, float y, float scale, const glm::vec4& color)
+{
+    i_fontRenderer.setAnchor(HCPAlignment::TOP_LEFT);
+    i_fontRenderer.setTextSize(scale);
+    i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
 }
 
 void HCPUIRender::renderBatch()
 {
-    HCPShaders::POS_UV_COLOR_TEXID();
+    HCPShaders::UI();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    i_fontRenderer.bindAtlas();
 
     i_batchMeshBuilder->drawElements(GL_TRIANGLES);
     i_batchMeshBuilder->reset();
@@ -181,4 +239,9 @@ static void i_init()
                    | HCPVF_ATTRB_NORMALIZED_FALSE;
 
     i_batchMeshBuilder = new HCPMeshBuilder(vtxFmt);
+
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &i_fontAtlasTexUnit);
+    i_fontRenderer.setAtlasTexUnit(i_fontAtlasTexUnit);
+
+    i_logger.infof("Initialized UIRender");
 }

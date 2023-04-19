@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 
 project(hyrdoponic-control-panel)
 
+add_subdirectory("dep/glad")
 add_subdirectory("dep/glfw")
 
 add_executable(${PROJECT_NAME}
@@ -10,10 +11,14 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     glfw
+    glad
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include
+    dep/glm
+    dep/glfw/include
+    dep/glad/include
 )
 
 #Copy resource files to current binary folder

@@ -41,7 +41,7 @@ void hcpui::init(GLFWwindow* window)
         glfwGetWindowSize(i_window, &i_windowWidth, &i_windowHeight);
 
 
-        i_inputContext = HCPInputs::get(i_window);
+        i_inputContext = hcpi::get(i_window);
         i_init();
     }
     else if(previousWindow)

@@ -12,6 +12,7 @@
 #include <UIRender.hpp>
 #include <Button.hpp>
 #include <Viewport.hpp>
+#include <Images.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -32,6 +33,9 @@ int main()
     viewport.x = 100;
     viewport.width = viewport.height = 100;
 
+    // Load an image texture
+    HCPImagePtr image = hcpimg::loadImage("res/texture.png");
+
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
@@ -44,6 +48,8 @@ int main()
         hcpui::setupUIRendering();
         hcpui::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
         hcpui::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
+        image->bindTexture(1);
+        hcpui::genQuad(400, 400, 600, 600, 0xFFFFFFFF, 1);
         hcpui::genString("§0Wa§lss§6up", 0, 0, 30, 0xFFFFFFFF);
         viewport.start(false);
         {

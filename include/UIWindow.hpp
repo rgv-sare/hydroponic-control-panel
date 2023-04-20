@@ -6,19 +6,20 @@
 #include "Viewport.hpp"
 
 #include <list>
+#include <memory>
 
 class HCPUIWindow : public HCPWidget
 {
 public:
-    static std::list<HCPUIWindow*> s_windows;
+    static std::list<std::shared_ptr<HCPUIWindow>> s_windows;
 
     template <typename T, typename... Args>
-    static T* createWindow(Args&&... args)
+    static std::weak_ptr<T> createWindow(Args&&... args)
     {
         int newZLevel = (int) s_windows.size() + 1;
         HCPWidget::setCurrentZLevel(newZLevel);
 
-        T* window = new T(std::forward<Args>(args)...);
+        std::shared_ptr<T> window = std::make_shared<T>(std::forward<Args>(args)...);
         s_windows.push_back(window);
         return window;
     }
@@ -29,6 +30,9 @@ public:
     HCPUIWindow(const char* title);
     HCPUIWindow(const HCPUIWindow& copy) = delete;
     ~HCPUIWindow();
+
+    void setShouldClose(bool shouldClose);
+    bool shouldClose() const;
 protected:
     HCPViewport m_viewport;
     virtual void drawContents();
@@ -44,9 +48,6 @@ private:
     std::string m_title;
     bool m_shouldClose;
     CloseButton m_closeButton;
-
-    void setShouldClose(bool shouldClose);
-    bool shouldClose() const;
 
     void draw();
 };

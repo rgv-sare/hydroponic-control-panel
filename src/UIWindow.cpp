@@ -2,7 +2,7 @@
 
 #include "UIRender.hpp"
 
-std::list<HCPUIWindow*> HCPUIWindow::s_windows;
+std::list<std::shared_ptr<HCPUIWindow>> HCPUIWindow::s_windows;
 
 HCPUIWindow::CloseButton::CloseButton() :
     HCPButton("X")
@@ -19,10 +19,9 @@ void HCPUIWindow::drawWindows()
 {
     for(auto i = s_windows.begin(); i != s_windows.end();)
     {
-        HCPUIWindow* window = *i;
+        auto window = *i;
         if (window->shouldClose())
         {
-            delete window;
             HCPWidget::setCurrentZLevel(HCPWidget::getCurrentZLevel() - 1);
             i = s_windows.erase(i);
         }
@@ -36,7 +35,7 @@ void HCPUIWindow::drawWindows()
 
 void HCPUIWindow::closeWindows()
 {
-    for (HCPUIWindow* window : s_windows)
+    for (auto window : s_windows)
     {
         window->setShouldClose(true);
     }

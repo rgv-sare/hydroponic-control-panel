@@ -24,7 +24,7 @@ int main()
     HCPInputContext* input = HCPInputs::registerWindow(window);
 
     mainLogger.infof("Loading OpenGL");
-    HCPUIRender::init(window);
+    hcpui::init(window);
 
     // Create a button and viewport
     HCPButton button("Le Button");
@@ -35,23 +35,23 @@ int main()
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
-        glViewport(0, 0, HCPUIRender::getWindowWidth(), HCPUIRender::getWindowHeight());
+        glViewport(0, 0, hcpui::getWindowWidth(), hcpui::getWindowHeight());
 
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        HCPUIRender::setupUIRendering();
-        HCPUIRender::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
-        HCPUIRender::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
-        HCPUIRender::genString("§0Wa§lss§6up", 0, 0, 30, 0xFFFFFFFF);
+        hcpui::setupUIRendering();
+        hcpui::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
+        hcpui::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
+        hcpui::genString("§0Wa§lss§6up", 0, 0, 30, 0xFFFFFFFF);
         viewport.start(false);
         {
             button.draw();
             button.setText(std::to_string(button.localCursorX()).c_str());
         }
         viewport.end();
-        HCPUIRender::renderBatch();
+        hcpui::renderBatch();
 
         if(button.isPressed()) mainLogger.infof("Button Pressed");
 

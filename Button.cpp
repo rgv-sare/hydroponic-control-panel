@@ -24,6 +24,6 @@ void HCPButton::doDraw()
 {
     int textColor = !isEnabled() ? 0xFFA0A0A0 : isHovered() ? 0xFFFFFFBA :0xFFE0E0E0;
     int backgroundColor = isHovered() ? 0x664C4C4C : 0x66000000;
-    HCPUIRender::genQuad(x, y, x + width, y + height, backgroundColor);
-    HCPUIRender::genString(HCPAlignment::CENTER, getText(), x + width / 2, y + height / 2, 15.0f, textColor);
+    hcpui::genQuad(x, y, x + width, y + height, backgroundColor);
+    hcpui::genString(HCPAlignment::CENTER, getText(), x + width / 2, y + height / 2, 15.0f, textColor);
 }

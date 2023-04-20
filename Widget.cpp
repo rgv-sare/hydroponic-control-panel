@@ -125,9 +125,9 @@ float HCPWidget::localCursorY() const
 void HCPWidget::draw()
 {
     m_modelView = hcps::getModelViewMatrix();
-    m_modelView = m_modelView * HCPUIRender::getModelViewMatrix();
+    m_modelView = m_modelView * hcpui::getModelViewMatrix();
 
-    HCPInputContext* input = HCPUIRender::getInputContext();
+    HCPInputContext* input = hcpui::getInputContext();
     updateHoverState();
 
     doDraw();
@@ -147,7 +147,7 @@ void HCPWidget::draw()
 
 void HCPWidget::doDraw()
 {
-    HCPUIRender::genQuad(x, y, x + width, y + height, 0xFFFFFFFF);
+    hcpui::genQuad(x, y, x + width, y + height, 0xFFFFFFFF);
 }
 
 void HCPWidget::updateHoverState()
@@ -156,8 +156,8 @@ void HCPWidget::updateHoverState()
 
     glm::mat4 inverseModelView = glm::inverse(clip.modelView);
     glm::vec4 uiCursorWidget(
-        HCPUIRender::getUICursorX(),
-        HCPUIRender::getUICursorY(),
+        hcpui::getUICursorX(),
+        hcpui::getUICursorY(),
         0.0f,
         1.0f
     );

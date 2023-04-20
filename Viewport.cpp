@@ -25,34 +25,34 @@ void HCPViewport::start(bool clipping)
         m_clippingStack.push(clip);
         m_wasClipping = true;
 
-        HCPUIRender::renderBatch(); // Render and flush the batch before writing to the stencil buffer
+        hcpui::renderBatch(); // Render and flush the batch before writing to the stencil buffer
         glEnable(GL_STENCIL_TEST);
         glStencilMask(0xFF);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        HCPUIRender::genQuad(x, y, x + width, y + height, 0xFFFFFFFF);
+        hcpui::genQuad(x, y, x + width, y + height, 0xFFFFFFFF);
         glColorMask(0, 0, 0, 0);
-        HCPUIRender::renderBatch();
+        hcpui::renderBatch();
         glColorMask(1, 1, 1, 1);
 
         glStencilFunc(GL_EQUAL, 1, 0xFF);
     }
 
-    HCPUIRender::pushStack();
-    HCPUIRender::translate(x, y);
+    hcpui::pushStack();
+    hcpui::translate(x, y);
 }
 
 void HCPViewport::end()
 {
     if(m_wasClipping)
     {
-        HCPUIRender::renderBatch();
+        hcpui::renderBatch();
         glDisable(GL_STENCIL_TEST);
         m_wasClipping = false;
         m_clippingStack.pop();
     }
 
-    HCPUIRender::popStack();
+    hcpui::popStack();
 }
 
 void HCPViewport::doDraw()

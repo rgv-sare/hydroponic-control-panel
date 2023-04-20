@@ -17,7 +17,7 @@ enum HCPDirection
     BOTTOM
 };
 
-class HCPUIRender
+class hcpui
 {
 public:
     static void init(GLFWwindow* window);

@@ -224,11 +224,11 @@ void HCPFontRenderer::genString(HCPMeshBuilder& meshBuilder, const char* str, si
             genChar(meshBuilder, unicode, xCursor, y, italics, bold, mixedColor);
             if(strikethrough)
             {
-                HCPUIRender::genHorizontalLine(y + m_textSize / 2, xCursor, xCursor + advance, mixedColor, m_textSize * 0.09f);
+                hcpui::genHorizontalLine(y + m_textSize / 2, xCursor, xCursor + advance, mixedColor, m_textSize * 0.09f);
             }
             if(underline)
             {
-                HCPUIRender::genHorizontalLine(y + m_textSize * 1.05f, xCursor, xCursor + advance, mixedColor, m_textSize * 0.09f);
+                hcpui::genHorizontalLine(y + m_textSize * 1.05f, xCursor, xCursor + advance, mixedColor, m_textSize * 0.09f);
             }
 
             xCursor += advance;

@@ -30,7 +30,7 @@ static inline void i_orientGradientQuad(float* dst, HCPDirection dir, float left
 static void i_resizeCallback(GLFWwindow* window, int width, int height);
 static void i_init();
 
-void HCPUIRender::init(GLFWwindow* window)
+void hcpui::init(GLFWwindow* window)
 {
     GLFWwindow* previousWindow = i_window;
     i_window = window;
@@ -51,12 +51,12 @@ void HCPUIRender::init(GLFWwindow* window)
     }
 }
 
-HCPInputContext* HCPUIRender::getInputContext()
+HCPInputContext* hcpui::getInputContext()
 {
     return i_inputContext;
 }
 
-void HCPUIRender::setupUIRendering()
+void hcpui::setupUIRendering()
 {
     glm::mat4 projection = glm::ortho(0.0f, (float) i_windowWidth, (float) i_windowHeight, 0.0f, -1.0f, 1.0f);
     hcps::setProjectionMatrix(projection);
@@ -66,14 +66,14 @@ void HCPUIRender::setupUIRendering()
     glDisable(GL_CULL_FACE);
 }
 
-void HCPUIRender::genQuad(float left, float top, float right, float bottom, uint32_t color, int texID)
+void hcpui::genQuad(float left, float top, float right, float bottom, uint32_t color, int texID)
 {
     glm::vec4 colorVec = getVec4Color(color);
 
     genQuad(left, top, right, bottom, colorVec, texID);
 }
 
-void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, uint32_t color1, uint32_t color2, int texID)
+void hcpui::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, uint32_t color1, uint32_t color2, int texID)
 {
     glm::vec4 colorVec1 = getVec4Color(color1);
     glm::vec4 colorVec2 = getVec4Color(color2);
@@ -81,35 +81,35 @@ void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top,
     genGradientQuad(direction, left, top, right, bottom, colorVec1, colorVec2, texID);
 }
 
-void HCPUIRender::genVerticalLine(float x, float top, float bottom, uint32_t color, float width)
+void hcpui::genVerticalLine(float x, float top, float bottom, uint32_t color, float width)
 {
     glm::vec4 colorVec = getVec4Color(color);
 
     genVerticalLine(x, top, bottom, colorVec, width);
 }
 
-void HCPUIRender::genHorizontalLine(float y, float left, float right, uint32_t color, float width)
+void hcpui::genHorizontalLine(float y, float left, float right, uint32_t color, float width)
 {
     glm::vec4 colorVec = getVec4Color(color);
 
     genHorizontalLine(y, left, right, colorVec, width);
 }
 
-void HCPUIRender::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, uint32_t color)
+void hcpui::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, uint32_t color)
 {
     glm::vec4 colorVec = getVec4Color(color);
 
     genString(alignment, str, x, y, scale, colorVec);
 }
 
-void HCPUIRender::genString(const char* str, float x, float y, float scale, uint32_t color)
+void hcpui::genString(const char* str, float x, float y, float scale, uint32_t color)
 {
     glm::vec4 colorVec = getVec4Color(color);
 
     genString(HCPAlignment::TOP_LEFT, str, x, y, scale, colorVec);
 }
 
-void HCPUIRender::genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID)
+void hcpui::genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID)
 {
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
@@ -119,7 +119,7 @@ void HCPUIRender::genQuad(float left, float top, float right, float bottom, cons
     i_batchMeshBuilder->vertex(NULL,  left,    top, 0.0f, 0.0f, 0.0f, vec4Color(color), texID);
 }
 
-void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID)
+void hcpui::genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID)
 {
     float positions[8];
     i_orientGradientQuad(positions, direction, left, top, right, bottom);
@@ -132,7 +132,7 @@ void HCPUIRender::genGradientQuad(HCPDirection direction, float left, float top,
     i_batchMeshBuilder->vertex(NULL, positions[6], positions[7], 0.0f, 0.0f, 0.0f, vec4Color(color1), texID);
 }
 
-void HCPUIRender::genVerticalLine(float x, float top, float bottom, const glm::vec4& color, float width)
+void hcpui::genVerticalLine(float x, float top, float bottom, const glm::vec4& color, float width)
 {
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
@@ -142,7 +142,7 @@ void HCPUIRender::genVerticalLine(float x, float top, float bottom, const glm::v
     i_batchMeshBuilder->vertex(NULL, x + width, top,    0.0f, 0.0f, 0.0f, vec4Color(color), 0);
 }
 
-void HCPUIRender::genHorizontalLine(float y, float left, float right, const glm::vec4& color, float width)
+void hcpui::genHorizontalLine(float y, float left, float right, const glm::vec4& color, float width)
 {
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
 
@@ -152,21 +152,21 @@ void HCPUIRender::genHorizontalLine(float y, float left, float right, const glm:
     i_batchMeshBuilder->vertex(NULL, left,  y - width,  0.0f, 0.0f, 0.0f, vec4Color(color), 0);
 }
 
-void HCPUIRender::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, const glm::vec4& color)
+void hcpui::genString(HCPAlignment alignment, const char* str, float x, float y, float scale, const glm::vec4& color)
 {
     i_fontRenderer.setAnchor(alignment);
     i_fontRenderer.setTextSize(scale);
     i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
 }
 
-void HCPUIRender::genString(const char* str, float x, float y, float scale, const glm::vec4& color)
+void hcpui::genString(const char* str, float x, float y, float scale, const glm::vec4& color)
 {
     i_fontRenderer.setAnchor(HCPAlignment::TOP_LEFT);
     i_fontRenderer.setTextSize(scale);
     i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
 }
 
-void HCPUIRender::renderBatch()
+void hcpui::renderBatch()
 {
     hcps::UI();
 
@@ -179,88 +179,88 @@ void HCPUIRender::renderBatch()
     i_batchMeshBuilder->reset();
 }
 
-float HCPUIRender::getStringwidth(const char* str, float scale)
+float hcpui::getStringwidth(const char* str, float scale)
 {
     return i_fontRenderer.getStringWidth(str, scale);
 }
 
-int HCPUIRender::getWindowWidth()
+int hcpui::getWindowWidth()
 {
     return i_windowWidth;
 }
 
-int HCPUIRender::getWindowHeight()
+int hcpui::getWindowHeight()
 {
     return i_windowHeight;
 }
 
-float HCPUIRender::getUIWidth()
+float hcpui::getUIWidth()
 {
     return i_windowWidth / i_uiScale;
 }
 
-float HCPUIRender::getUIHeight()
+float hcpui::getUIHeight()
 {
     return i_windowHeight / i_uiScale;
 }
 
-float HCPUIRender::getUIScale()
+float hcpui::getUIScale()
 {
     return i_uiScale;
 }
 
-float HCPUIRender::getUICursorX()
+float hcpui::getUICursorX()
 {
     return i_inputContext->cursorX() / i_uiScale;
 }
 
-float HCPUIRender::getUICursorY()
+float hcpui::getUICursorY()
 {
     return i_inputContext->cursorY() / i_uiScale;
 }
 
-void HCPUIRender::pushStack()
+void hcpui::pushStack()
 {
     i_batchMeshBuilder->pushMatrix();
 }
 
-void HCPUIRender::popStack()
+void hcpui::popStack()
 {
     i_batchMeshBuilder->popMatrix();
 }
 
-void HCPUIRender::translate(float x, float y)
+void hcpui::translate(float x, float y)
 {
     glm::mat4& mat = i_batchMeshBuilder->getModelView();
 
     mat = glm::translate(mat, glm::vec3(x, y, 0.0f));
 }
 
-void HCPUIRender::scale(float x, float y)
+void hcpui::scale(float x, float y)
 {
     glm::mat4& mat = i_batchMeshBuilder->getModelView();
 
     mat = glm::scale(mat, glm::vec3(x, y, 1.0f));
 }
 
-void HCPUIRender::rotate(float angle)
+void hcpui::rotate(float angle)
 {
     glm::mat4& mat = i_batchMeshBuilder->getModelView();
 
     mat = glm::rotate(mat, angle, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-void HCPUIRender::multiplyMatrix(const glm::mat4& mat)
+void hcpui::multiplyMatrix(const glm::mat4& mat)
 {
     i_batchMeshBuilder->getModelView() *= mat;
 }
 
-void HCPUIRender::setMatrix(const glm::mat4& mat)
+void hcpui::setMatrix(const glm::mat4& mat)
 {
     i_batchMeshBuilder->getModelView() = mat;
 }
 
-glm::mat4& HCPUIRender::getModelViewMatrix()
+glm::mat4& hcpui::getModelViewMatrix()
 {
     return i_batchMeshBuilder->getModelView();
 }

@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME}
     stb_image.c
     Widget.cpp
     Button.cpp
+    Viewport.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -11,6 +11,7 @@
 #include <Shaders.hpp>
 #include <UIRender.hpp>
 #include <Button.hpp>
+#include <Viewport.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -25,22 +26,31 @@ int main()
     mainLogger.infof("Loading OpenGL");
     HCPUIRender::init(window);
 
-    // Create a button
+    // Create a button and viewport
     HCPButton button("Le Button");
+    HCPViewport viewport;
+    viewport.x = 100;
+    viewport.width = viewport.height = 100;
 
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
-        if(input->isKeyHeld(GLFW_KEY_SPACE)) glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-        else glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glViewport(0, 0, HCPUIRender::getWindowWidth(), HCPUIRender::getWindowHeight());
+
+        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT);
 
         HCPUIRender::setupUIRendering();
         HCPUIRender::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);
         HCPUIRender::genQuad(10, 300, 100, 400, 0XFF00FFFF, 0);
-        HCPUIRender::genString("§0Wass§6up", 0, 0, 30, 0xFFFFFFFF);
-        button.draw();
+        HCPUIRender::genString("§0Wa§lss§6up", 0, 0, 30, 0xFFFFFFFF);
+        viewport.start(false);
+        {
+            button.draw();
+            button.setText(std::to_string(button.localCursorX()).c_str());
+        }
+        viewport.end();
         HCPUIRender::renderBatch();
 
         if(button.isPressed()) mainLogger.infof("Button Pressed");

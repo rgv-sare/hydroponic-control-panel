@@ -124,7 +124,7 @@ float HCPWidget::localCursorY() const
 
 void HCPWidget::draw()
 {
-    m_modelView = HCPShaders::getModelViewMatrix();
+    m_modelView = hcps::getModelViewMatrix();
     m_modelView = m_modelView * HCPUIRender::getModelViewMatrix();
 
     HCPInputContext* input = HCPUIRender::getInputContext();

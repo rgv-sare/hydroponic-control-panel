@@ -59,8 +59,8 @@ HCPInputContext* HCPUIRender::getInputContext()
 void HCPUIRender::setupUIRendering()
 {
     glm::mat4 projection = glm::ortho(0.0f, (float) i_windowWidth, (float) i_windowHeight, 0.0f, -1.0f, 1.0f);
-    HCPShaders::setProjectionMatrix(projection);
-    HCPShaders::setModelViewMatrix(i_batchMeshBuilder->getModelView());
+    hcps::setProjectionMatrix(projection);
+    hcps::setModelViewMatrix(i_batchMeshBuilder->getModelView());
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -168,7 +168,7 @@ void HCPUIRender::genString(const char* str, float x, float y, float scale, cons
 
 void HCPUIRender::renderBatch()
 {
-    HCPShaders::UI();
+    hcps::UI();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

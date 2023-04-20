@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-class HCPShaders
+class hcps
 {
 public:
     static void setProjectionMatrix(const glm::mat4& proj);

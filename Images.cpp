@@ -14,22 +14,22 @@ HCPImage::~HCPImage()
         glDeleteTextures(1, &m_id);
 }
 
-GLuint HCPImage::getID()
+GLuint HCPImage::getID() const
 {
     return m_id;
 }
 
-int HCPImage::getWidth()
+int HCPImage::getWidth() const
 {
     return m_width;
 }
 
-int HCPImage::getHeight()
+int HCPImage::getHeight() const
 {
     return m_height;
 }
 
-void HCPImage::bindTexture(int texUnit)
+void HCPImage::bindTexture(int texUnit) const
 {
     if(m_id == 0xFFFFFFFF)
         return;

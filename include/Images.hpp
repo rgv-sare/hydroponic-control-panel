@@ -11,11 +11,11 @@ public:
     HCPImage();
     ~HCPImage();
 
-    GLuint getID();
-    int getWidth();
-    int getHeight();
+    GLuint getID() const;
+    int getWidth() const;
+    int getHeight() const;
 
-    void bindTexture(int texUnit = 0);
+    void bindTexture(int texUnit = 0) const;
 private:
     int m_width;
     int m_height;

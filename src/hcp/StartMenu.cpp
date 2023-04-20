@@ -5,20 +5,20 @@
 
 #include "UIRender.hpp"
 
-HCPMainMenu::HCPMainMenu() :
-    HCPScreen(Type::MAIN_MENU, "Start Menu")
+HCPStartMenu::HCPStartMenu() :
+    HCPScreen(Type::START_MENU, "Start Menu")
 {
     snprintf(m_splashText, 256, "Hydroponics Control Panel - %s", hcpr::getAppVersion());
 }
 
-void HCPMainMenu::setup()
+void HCPStartMenu::setup()
 {
     m_nasaMindsLogo = hcpr::getImage("nasa_minds_logo");
     m_selectSerialPortButton.setText("§7Unselected");
     m_okButton.setText("OK");
 }
 
-void HCPMainMenu::draw()
+void HCPStartMenu::draw()
 {
     hcpui::setupUIRendering();
 
@@ -81,12 +81,12 @@ void HCPMainMenu::draw()
     handleInput();
 }
 
-void HCPMainMenu::close()
+void HCPStartMenu::close()
 {
     
 }
 
-void HCPMainMenu::handleInput()
+void HCPStartMenu::handleInput()
 {
     const char* ports[8] =
     {

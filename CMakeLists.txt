@@ -39,6 +39,7 @@ add_executable(${PROJECT_NAME}
     src/hcp/StartMenu.cpp
     src/hcp/Resources.cpp
     src/hcp/SelectionWindow.cpp
+    src/hcp/MainMenu.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

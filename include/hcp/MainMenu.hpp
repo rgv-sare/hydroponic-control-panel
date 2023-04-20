@@ -3,31 +3,27 @@
 
 #include "hcp/Screen.hpp"
 #include "hcp/Resources.hpp"
-#include "hcp/SelectionWindow.hpp"
 
+#include "UIWindow.hpp"
 #include "Viewport.hpp"
 #include "Button.hpp"
 
-class HCPStartMenu : public HCPScreen
+class HCPMainMenu : public HCPScreen
 {
 public:
-    HCPStartMenu();
+    HCPMainMenu();
 
     void setup() override;
     void draw() override;
     void close() override;
 private:
+    char m_splashText[256];
     HCPImagePtr m_nasaMindsLogo;
 
     HCPViewport m_viewport;
-    HCPButton m_selectSerialPortButton;
-    HCPButton m_okButton;
 
-    std::weak_ptr<HCPSelectionWindow> m_serialPortSelectionWindow;
-
-    char m_splashText[256];
-
-    int m_selectedSerialPort;
+    HCPButton m_manualControlButton;
+    bool m_manualControlEnabled;
 
     void handleInput();
 };

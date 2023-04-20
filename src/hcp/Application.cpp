@@ -5,7 +5,7 @@
 #include "Images.hpp"
 
 #include "hcp/Resources.hpp"
-#include "hcp/StartMenu.hpp"
+#include "hcp/MainMenu.hpp"
 
 HCPLogger mainLogger("Main");
 

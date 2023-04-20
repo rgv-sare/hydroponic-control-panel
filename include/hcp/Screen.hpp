@@ -9,6 +9,7 @@ public:
     enum Type
     {
         NONE,
+        START_MENU,
         MAIN_MENU
     };
 

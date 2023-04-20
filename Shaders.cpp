@@ -113,62 +113,62 @@ static BasicShader i_POS_COLOR_SHADER(POS_COLOR_SHADER_vcode, POS_COLOR_SHADER_f
 static BasicShader i_POS_UV_COLOR_TEXID_SHADER(POS_UV_COLOR_TEXID_SHADER_vcode, POS_UV_COLOR_TEXID_SHADER_fcode);
 static BasicShader i_UI_SHADER(UI_SHADER_vcode, UI_SHADER_fcode);
 
-void HCPShaders::setProjectionMatrix(const glm::mat4& proj)
+void hcps::setProjectionMatrix(const glm::mat4& proj)
 {
     i_projectionMatrix = proj;
 }
 
-void HCPShaders::setModelViewMatrix(const glm::mat4& modelView)
+void hcps::setModelViewMatrix(const glm::mat4& modelView)
 {
     i_modelViewMatrix = modelView;
 }
 
-void HCPShaders::setColor(const glm::vec4& color)
+void hcps::setColor(const glm::vec4& color)
 {
     i_color = color;
 }
 
-void HCPShaders::setColor(float r, float g, float b, float a)
+void hcps::setColor(float r, float g, float b, float a)
 {
     i_color = glm::vec4(r, g, b, a);
 }
 
-glm::mat4 HCPShaders::getProjectionMatrix()
+glm::mat4 hcps::getProjectionMatrix()
 {
     return i_projectionMatrix;
 }
 
-glm::mat4 HCPShaders::getModelViewMatrix()
+glm::mat4 hcps::getModelViewMatrix()
 {
     return i_modelViewMatrix;
 }
 
-glm::vec4 HCPShaders::getColor()
+glm::vec4 hcps::getColor()
 {
     return i_color;
 }
 
-void HCPShaders::POS()
+void hcps::POS()
 {
     i_POS_SHADER.use();
 }
 
-void HCPShaders::POS_UV()
+void hcps::POS_UV()
 {
     i_POS_UV_SHADER.use();
 }
 
-void HCPShaders::POS_COLOR()
+void hcps::POS_COLOR()
 {
     i_POS_COLOR_SHADER.use();
 }
 
-void HCPShaders::POS_UV_COLOR_TEXID()
+void hcps::POS_UV_COLOR_TEXID()
 {
     i_POS_UV_COLOR_TEXID_SHADER.use();
 }
 
-void HCPShaders::UI()
+void hcps::UI()
 {
     i_UI_SHADER.use();
 }

@@ -181,7 +181,8 @@ void hcpui::renderBatch()
 
 float hcpui::getStringwidth(const char* str, float scale)
 {
-    return i_fontRenderer.getStringWidth(str, scale);
+    i_fontRenderer.setTextSize(scale);
+    return i_fontRenderer.getStringWidth(str);
 }
 
 int hcpui::getWindowWidth()

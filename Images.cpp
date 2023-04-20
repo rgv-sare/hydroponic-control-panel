@@ -45,6 +45,11 @@ HCPImage::HCPImage() :
 {
 }
 
+HCPImagePtr hcpimg::nullImage()
+{
+    return i_nullImage;
+}
+
 HCPImagePtr hcpimg::loadImage(const char* path)
 {
     stbi_set_flip_vertically_on_load(true);

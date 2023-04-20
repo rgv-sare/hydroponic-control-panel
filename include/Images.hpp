@@ -29,6 +29,7 @@ typedef std::shared_ptr<HCPImage> HCPImagePtr;
 class hcpimg
 {
 public:
+    static HCPImagePtr nullImage();
     static HCPImagePtr loadImage(const char* path);
     static HCPImagePtr loadImageFromMemory(const char* data, int size);
 };

@@ -2,8 +2,21 @@ cmake_minimum_required(VERSION 3.2)
 
 project(hyrdoponic-control-panel)
 
+set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory("dep/glad")
 add_subdirectory("dep/glfw")
+
+#Add assimp
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL " " FORCE)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON  CACHE BOOL " " FORCE)
+set(ASSIMP_BUILD_PLY_IMPORTER ON  CACHE BOOL " " FORCE)
+set(ASSIMP_NO_EXPORT          ON  CACHE BOOL " " FORCE)
+set(ASSIMP_BUILD_TESTS        OFF CACHE BOOL " " FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL " " FORCE)
+set(ASSIMP_INSTALL            OFF CACHE BOOL " " FORCE)
+set(BUILD_SHARED_LIBS         OFF CACHE BOOL " " FORCE)
+add_subdirectory("dep/assimp")
 
 add_executable(${PROJECT_NAME}
     main.cpp
@@ -18,11 +31,13 @@ add_executable(${PROJECT_NAME}
     Button.cpp
     Viewport.cpp
     Images.cpp
+    Mesh.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
     glfw
     glad
+    assimp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -30,6 +45,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     dep/glm
     dep/glfw/include
     dep/glad/include
+    dep/assimp/include
 )
 
 #Copy resource files to current binary folder

@@ -13,6 +13,7 @@
 #include <Button.hpp>
 #include <Viewport.hpp>
 #include <Images.hpp>
+#include <Mesh.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -36,6 +37,18 @@ int main()
     // Load an image texture
     HCPImagePtr image = hcpimg::loadImage("res/texture.png");
 
+    // Load a mesh
+    HCPVertexFormat format;
+    format.size = 2;
+    format[0].data = HCPVF_ATTRB_USAGE_POS
+                   | HCPVF_ATTRB_TYPE_FLOAT
+                   | HCPVF_ATTRB_SIZE(3);
+    format[1].data = HCPVF_ATTRB_USAGE_COLOR
+                   | HCPVF_ATTRB_TYPE_FLOAT
+                   | HCPVF_ATTRB_SIZE(4);
+    HCPMeshPtr mesh = hcpm::loadMeshes("res/piston.ply")[0];
+    mesh->makeRenderable(format);
+
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
@@ -44,6 +57,11 @@ int main()
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT);
+
+        hcps::setProjectionMatrix(glm::mat4(1.0f));
+        hcps::POS_COLOR();
+
+        mesh->render();
 
         hcpui::setupUIRendering();
         hcpui::genQuad(10, 10, 100, 100, 0XFFFFFFFF, 0);

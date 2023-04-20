@@ -12,8 +12,7 @@ public:
     {
         WIDGET,
         BUTTON,
-        VIEWPORT,
-        GAUGE,
+        VIEWPORT
     };
 
     static int getCurrentZLevel();

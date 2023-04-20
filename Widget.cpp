@@ -33,7 +33,7 @@ HCPWidget::HCPWidget() :
 {
     if(m_clippingStack.empty())
     {
-        m_clippingStack.push({m_modelView, 0.0f, 0.0f, 0.0f, 0.0f, false});
+        m_clippingStack.push({glm::mat4(1.0f), 0.0f, 0.0f, 0.0f, 0.0f, false});
     }
 }
 
@@ -124,7 +124,7 @@ float HCPWidget::localCursorY() const
 
 void HCPWidget::draw()
 {
-    m_modelView = HCPUIRender::getModelViewMatrix();
+    m_modelView = HCPShaders::getModelViewMatrix();
     m_modelView = m_modelView * HCPUIRender::getModelViewMatrix();
 
     HCPInputContext* input = HCPUIRender::getInputContext();

@@ -36,7 +36,7 @@ add_executable(${PROJECT_NAME}
     src/Animation.cpp
 
     src/hcp/Application.cpp
-    src/hcp/MainMenu.cpp
+    src/hcp/StartMenu.cpp
     src/hcp/Resources.cpp
     src/hcp/SelectionWindow.cpp
 )

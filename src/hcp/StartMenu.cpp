@@ -1,4 +1,4 @@
-#include "hcp/MainMenu.hpp"
+#include "hcp/StartMenu.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -6,7 +6,7 @@
 #include "UIRender.hpp"
 
 HCPMainMenu::HCPMainMenu() :
-    HCPScreen(Type::MAIN_MENU, "Main Menu")
+    HCPScreen(Type::MAIN_MENU, "Start Menu")
 {
     snprintf(m_splashText, 256, "Hydroponics Control Panel - %s", hcpr::getAppVersion());
 }

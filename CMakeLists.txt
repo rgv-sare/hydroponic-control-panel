@@ -19,20 +19,21 @@ set(BUILD_SHARED_LIBS         OFF CACHE BOOL " " FORCE)
 add_subdirectory("dep/assimp")
 
 add_executable(${PROJECT_NAME}
-    main.cpp
-    Logger.cpp
-    Inputs.cpp
-    MeshBuilder.cpp
-    Shaders.cpp
-    UIRender.cpp
-    FontRenderer.cpp
-    stb_image.c
-    Widget.cpp
-    Button.cpp
-    Viewport.cpp
-    Images.cpp
-    Mesh.cpp
-    UIWindow.cpp
+    src/main.cpp
+    src/Logger.cpp
+    src/Inputs.cpp
+    src/MeshBuilder.cpp
+    src/Shaders.cpp
+    src/UIRender.cpp
+    src/FontRenderer.cpp
+    src/stb_image.c
+    src/Widget.cpp
+    src/Button.cpp
+    src/Viewport.cpp
+    src/Images.cpp
+    src/Mesh.cpp
+    src/UIWindow.cpp
+    src/Animation.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

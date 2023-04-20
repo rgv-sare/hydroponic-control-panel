@@ -31,7 +31,7 @@ public:
     ~HCPUIWindow();
 protected:
     HCPViewport m_viewport;
-    //virtual void drawContents() = 0;
+    virtual void drawContents();
 private:
     class CloseButton : public HCPButton
     {

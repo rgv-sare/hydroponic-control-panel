@@ -23,6 +23,7 @@ void HCPUIWindow::drawWindows()
         if (window->shouldClose())
         {
             delete window;
+            HCPWidget::setCurrentZLevel(HCPWidget::getCurrentZLevel() - 1);
             i = s_windows.erase(i);
         }
         else
@@ -57,6 +58,11 @@ HCPUIWindow::HCPUIWindow(const char* title) :
 HCPUIWindow::~HCPUIWindow()
 {
     
+}
+
+void HCPUIWindow::drawContents()
+{
+    hcpui::genQuad(0, 0, m_viewport.width, m_viewport.height, 0XFFFFFFFF);
 }
 
 void HCPUIWindow::setShouldClose(bool shouldClose)
@@ -104,6 +110,16 @@ void HCPUIWindow::draw()
             m_closeButton.draw();
         }
         titleBar.end();
+
+        m_viewport.x = 0;
+        m_viewport.y = titleBarHeight + edgeSize;
+        m_viewport.width = box.width;
+
+        m_viewport.start(false);
+        {
+            drawContents();
+        }
+        m_viewport.end();
     }
     box.end();
 

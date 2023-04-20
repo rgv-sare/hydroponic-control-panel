@@ -14,6 +14,7 @@
 #include <Viewport.hpp>
 #include <Images.hpp>
 #include <Mesh.hpp>
+#include <UIWindow.hpp>
 
 HCPLogger mainLogger("Main");
 
@@ -49,6 +50,9 @@ int main()
     HCPMeshPtr mesh = hcpm::loadMeshes("res/piston.ply")[0];
     mesh->makeRenderable(format);
 
+    // Create a UIwindow
+    HCPUIWindow* window1 = HCPUIWindow::createWindow<HCPUIWindow>("Test Window");
+
     mainLogger.infof("Entering Program Loop");
     while(!glfwWindowShouldClose(window))
     {
@@ -75,6 +79,9 @@ int main()
             button.setText(std::to_string(button.localCursorX()).c_str());
         }
         viewport.end();
+
+        HCPUIWindow::drawWindows();
+
         hcpui::renderBatch();
 
         if(button.isPressed()) mainLogger.infof("Button Pressed");

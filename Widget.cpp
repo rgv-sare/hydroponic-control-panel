@@ -23,7 +23,7 @@ HCPWidget::HCPWidget() :
     m_hovered(false),
     m_visible(true),
     m_enabled(true),
-    m_zLevel(0),
+    m_zLevel(m_currentZLevel),
     m_type(WIDGET),
     m_modelView(1.0f),
     m_localCursor(0.0f, 0.0f),

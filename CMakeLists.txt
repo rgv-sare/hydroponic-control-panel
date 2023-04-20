@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
     Viewport.cpp
     Images.cpp
     Mesh.cpp
+    UIWindow.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

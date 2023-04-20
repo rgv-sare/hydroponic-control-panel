@@ -34,6 +34,11 @@ add_executable(${PROJECT_NAME}
     src/Mesh.cpp
     src/UIWindow.cpp
     src/Animation.cpp
+
+    src/hcp/Application.cpp
+    src/hcp/MainMenu.cpp
+    src/hcp/Resources.cpp
+    src/hcp/SelectionWindow.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

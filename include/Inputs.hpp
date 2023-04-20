@@ -55,14 +55,14 @@ private:
 
     bool m_justScrolled;
 
-    friend class HCPInputs;
+    friend class hcpi;
     friend void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
     friend void onMouseEvent(GLFWwindow* window, int button, int action, int mods);
     friend void onCursorMove(GLFWwindow* window, double cursorX, double cursorY);
     friend void onScroll(GLFWwindow* window, double scrollX, double scrollY);
 };
 
-class HCPInputs
+class hcpi
 {
 public:
     static HCPInputContext* registerWindow(GLFWwindow* window);

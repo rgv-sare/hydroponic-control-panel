@@ -110,7 +110,7 @@ HCPInputContext::HCPInputContext(GLFWwindow* window) :
     memset(m_keyRepeatingStates, 0, sizeof(m_keyRepeatingStates));
 }
 
-HCPInputContext* HCPInputs::registerWindow(GLFWwindow* window)
+HCPInputContext* hcpi::registerWindow(GLFWwindow* window)
 {
     s_inputContexts[window] = HCPInputContext(window);
 
@@ -124,7 +124,7 @@ HCPInputContext* HCPInputs::registerWindow(GLFWwindow* window)
     return &s_inputContexts[window];
 }
 
-HCPInputContext* HCPInputs::setActiveWindow(GLFWwindow* window)
+HCPInputContext* hcpi::setActiveWindow(GLFWwindow* window)
 {
     auto inputContext = s_inputContexts.find(window);
 
@@ -136,7 +136,7 @@ HCPInputContext* HCPInputs::setActiveWindow(GLFWwindow* window)
     return &inputContext->second;
 }
 
-HCPInputContext* HCPInputs::get(GLFWwindow* window)
+HCPInputContext* hcpi::get(GLFWwindow* window)
 {
     auto inputContext = s_inputContexts.find(window);
 
@@ -148,12 +148,12 @@ HCPInputContext* HCPInputs::get(GLFWwindow* window)
     return NULL;
 }
 
-HCPInputContext* HCPInputs::get()
+HCPInputContext* hcpi::get()
 {
     return s_activeContext;
 }
 
-void HCPInputs::update()
+void hcpi::update()
 {
     auto i = s_inputContexts.begin();
 
@@ -205,7 +205,7 @@ static inline int i_getNthBit(const uint32_t* flagBuffer, int bit)
 
 static void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    HCPInputContext* context = HCPInputs::get(window);
+    HCPInputContext* context = hcpi::get(window);
     if(!context) return;
 
     if(action == GLFW_PRESS)
@@ -226,7 +226,7 @@ static void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, in
 
 static void onMouseEvent(GLFWwindow* window, int button, int action, int mods)
 {
-    HCPInputContext* context = HCPInputs::get(window);
+    HCPInputContext* context = hcpi::get(window);
     if(!context) return;
 
     if(action == GLFW_PRESS)
@@ -243,7 +243,7 @@ static void onMouseEvent(GLFWwindow* window, int button, int action, int mods)
 
 static void onCursorMove(GLFWwindow* window, double cursorX, double cursorY)
 {
-    HCPInputContext* context = HCPInputs::get(window);
+    HCPInputContext* context = hcpi::get(window);
     if(!context) return;
     
     context->m_cursorPosX = (float) cursorX;
@@ -252,7 +252,7 @@ static void onCursorMove(GLFWwindow* window, double cursorX, double cursorY)
 
 static void onScroll(GLFWwindow* window, double scrollX, double scrollY)
 {
-    HCPInputContext* context = HCPInputs::get(window);
+    HCPInputContext* context = hcpi::get(window);
     if(!context) return;
 
     context->m_scrollDeltaX = (float) scrollX;

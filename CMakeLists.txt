@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory("dep/glad")
 add_subdirectory("dep/glfw")
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory("dep/json")
+
 #Add assimp
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL " " FORCE)
 set(ASSIMP_BUILD_OBJ_IMPORTER ON  CACHE BOOL " " FORCE)
@@ -46,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
     glfw
     glad
     assimp
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -54,6 +58,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     dep/glfw/include
     dep/glad/include
     dep/assimp/include
+    dep/json/include
 )
 
 #Copy resource files to current binary folder

@@ -17,6 +17,17 @@ public:
     void draw() override;
     void close() override;
 private:
+    class JoyStickVisual : public HCPWidget
+    {
+    public:
+        JoyStickVisual();
+
+        float joyX, joyY;
+        const char* axesLabels[4]; // x, -x, y, -y
+    protected:
+        void doDraw() override;
+    };
+
     char m_splashText[256];
     HCPImagePtr m_nasaMindsLogo;
 
@@ -25,6 +36,17 @@ private:
     HCPButton m_manualControlButton;
     bool m_manualControlEnabled;
 
+    JoyStickVisual m_xyJoystick;
+    JoyStickVisual m_clawJoystick;
+
+    // Float robot values
+    float m_robX, m_robY, m_robSwivel, m_robClaw;
+
+    void drawHeader();
+    void drawConsole();
+    void drawJoysticks();
+    void drawRobotView();
+    void drawRobotArmView();
     void handleInput();
 };
 

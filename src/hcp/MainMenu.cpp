@@ -30,6 +30,9 @@ void HCPMainMenu::draw()
 
     hcpui::genString(m_splashText, 0, 0, 18.0f, 0xFF777777);
 
+    HCPInputContext* inputs = hcpi::get();
+    hcpui::genString(std::to_string(inputs->numGameControllers()).c_str(), 0, 20, 18.0f, 0xFFFFFFFF);
+
     m_viewport.width = glm::max(800.0f, hcpui::getUIWidth() * 0.85f);
     m_viewport.height = glm::max(600.0f, m_viewport.width * 0.5625f);
     m_viewport.x = (hcpui::getUIWidth() - m_viewport.width) / 2.0f;

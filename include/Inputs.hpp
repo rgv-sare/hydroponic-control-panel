@@ -72,8 +72,8 @@ public:
     float scrollDeltaX() const;
     float scrollDeltaY() const;
 
-    int numGameControllers() const;
-    const HCPGameController& getGameController(int index) const;
+    static int numGameControllers() const;
+    static const HCPGameController& getGameController(int index) const;
 private:
     HCPInputContext(GLFWwindow* window);
 

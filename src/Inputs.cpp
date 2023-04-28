@@ -1,15 +1,131 @@
 #include "Inputs.hpp"
 
+#include <cstring>
+
 static HCPInputContext* s_activeContext = NULL;
 static std::map<GLFWwindow*, HCPInputContext> s_inputContexts;
 
 // Callbacks
+static bool i_controllerCallbackSet = false;
 static void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void onMouseEvent(GLFWwindow* window, int button, int action, int mods);
 static void onCursorMove(GLFWwindow* window, double cursorX, double cursorY);
 static void onScroll(GLFWwindow* window, double scrollX, double scrollY);
+static void onControllerConnect(int id, int event);
 
+static void i_setNthBit(uint32_t* flagBuffer, int bit);
+static void i_clearNthBit(uint32_t* flagBuffer, int bit);
 static int i_getNthBit(const uint32_t* flagBuffer, int bit);
+
+HCPGameController::HCPGameController() :
+    m_id(-1),
+    m_connected(false),
+    m_numButtons(0),
+    m_numAxes(0)
+{
+    m_name[0] = '\0';
+}
+
+int HCPGameController::getID() const
+{
+    return m_id;
+}
+
+const char* HCPGameController::getName() const
+{
+    return m_name;
+}
+
+bool HCPGameController::isConnected() const
+{
+    return m_connected;
+}
+
+int HCPGameController::numButtons() const
+{
+    return m_numButtons;
+}
+
+bool HCPGameController::isButtonHeld(int button) const
+{
+    return (bool) i_getNthBit(m_buttonHeldStates, button);
+}
+
+bool HCPGameController::isButtonPressed(int button) const
+{
+    return (bool) i_getNthBit(m_buttonPressedStates, button);
+}
+
+bool HCPGameController::isButtonReleased(int button) const
+{
+    return (bool) i_getNthBit(m_buttonReleasedStates, button);
+}
+
+int HCPGameController::numAxes() const
+{
+    return m_numAxes;
+}
+
+bool HCPGameController::axisJustMoved(int axis) const
+{
+    return (bool) i_getNthBit(m_axisMovedStates, axis);
+}
+
+float HCPGameController::axis(int axis) const
+{
+    return m_axes[axis];
+}
+
+float HCPGameController::axisDelta(int axis) const
+{
+    return m_axesDeltas[axis];
+}
+
+HCPGameController::HCPGameController(int id, const char* name) :
+    m_id(id),
+    m_connected(true),
+    m_numButtons(0),
+    m_numAxes(0)
+{
+    strncpy_s(m_name, name, 128);
+
+    memset(m_buttonHeldStates, 0, sizeof(m_buttonHeldStates));
+    memset(m_buttonPressedStates, 0, sizeof(m_buttonPressedStates));
+    memset(m_buttonReleasedStates, 0, sizeof(m_buttonReleasedStates));
+    memset(m_axisMovedStates, 0, sizeof(m_axisMovedStates));
+    memset(m_axes, 0, sizeof(m_axes));
+    memset(m_axesDeltas, 0, sizeof(m_axesDeltas));
+}
+
+void HCPGameController::update()
+{
+    memset(m_buttonPressedStates, 0, sizeof(m_buttonPressedStates));
+    memset(m_buttonReleasedStates, 0, sizeof(m_buttonReleasedStates));
+    memset(m_axisMovedStates, 0, sizeof(m_axisMovedStates));
+
+    const float* axes = glfwGetJoystickAxes(m_id, &m_numAxes);
+    for (int i = 0; i < m_numAxes; i++)
+    {
+        m_axesDeltas[i] = axes[i] - m_axes[i];
+        m_axes[i] = axes[i];
+        if (m_axesDeltas[i] != 0.0f)
+        {
+            i_setNthBit(m_axisMovedStates, i);
+        }
+    }
+
+    const unsigned char* buttons = glfwGetJoystickButtons(m_id, &m_numButtons);
+    for (int i = 0; i < m_numButtons; i++)
+    {
+        bool held = buttons[i] == GLFW_PRESS;
+        bool pressed = held && !i_getNthBit(m_buttonHeldStates, i);
+        bool released = !held && i_getNthBit(m_buttonHeldStates, i);
+        if (pressed) i_setNthBit(m_buttonPressedStates, i);
+        if (released) i_setNthBit(m_buttonReleasedStates, i);
+        if (held) i_setNthBit(m_buttonHeldStates, i);
+        else i_clearNthBit(m_buttonHeldStates, i);
+    }
+}
 
 GLFWwindow* HCPInputContext::getWindow() const
 {
@@ -86,6 +202,16 @@ float HCPInputContext::scrollDeltaY() const
     return m_scrollDeltaY;
 }
 
+int HCPInputContext::numGameControllers() const
+{
+    return m_numGameControllers;
+}
+
+const HCPGameController& HCPInputContext::getGameController(int id) const
+{
+    return m_gameControllers[id];
+}
+
 HCPInputContext::HCPInputContext() :
     HCPInputContext(NULL)
 {
@@ -110,6 +236,9 @@ HCPInputContext::HCPInputContext(GLFWwindow* window) :
     memset(m_keyRepeatingStates, 0, sizeof(m_keyRepeatingStates));
 }
 
+int HCPInputContext::m_numGameControllers = 0;
+HCPGameController HCPInputContext::m_gameControllers[16];
+
 HCPInputContext* hcpi::registerWindow(GLFWwindow* window)
 {
     s_inputContexts[window] = HCPInputContext(window);
@@ -118,6 +247,20 @@ HCPInputContext* hcpi::registerWindow(GLFWwindow* window)
     glfwSetMouseButtonCallback(window, onMouseEvent);
     glfwSetCursorPosCallback(window, onCursorMove);
     glfwSetScrollCallback(window, onScroll);
+
+    if(!i_controllerCallbackSet)
+    {
+        glfwSetJoystickCallback(onControllerConnect);
+
+        // Check for already connected controllers
+        for(int i = 0; i < 16; i++)
+        {
+            if(glfwJoystickPresent(i))
+                onControllerConnect(i, GLFW_CONNECTED);
+        }
+
+        i_controllerCallbackSet = true;
+    }
 
     if(!s_activeContext) s_activeContext = &s_inputContexts[window];
 
@@ -170,6 +313,21 @@ void hcpi::update()
         context.m_prevCursorPosX = context.m_cursorPosX;
         context.m_prevCursorPosY = context.m_cursorPosY;
         context.m_justScrolled = false;
+    }
+
+    for(int j = 0; j < 16; j++)
+    {
+        if(!HCPInputContext::m_gameControllers[j].isConnected()) continue;
+
+        // If the controller was just disconnected
+        if(!glfwJoystickPresent(j))
+        {
+            HCPInputContext::m_gameControllers[j] = HCPGameController();
+            HCPInputContext::m_numGameControllers--;
+            continue;
+        }
+
+        HCPInputContext::m_gameControllers[j].update();
     }
 }
 
@@ -258,4 +416,14 @@ static void onScroll(GLFWwindow* window, double scrollX, double scrollY)
     context->m_scrollDeltaX = (float) scrollX;
     context->m_scrollDeltaY = (float) scrollY;
     context->m_justScrolled = true;
+}
+
+static void onControllerConnect(int id, int event)
+{
+    if(event == GLFW_CONNECTED)
+    {
+        const char* name = glfwGetJoystickName(id);
+        HCPInputContext::m_numGameControllers++;
+        HCPInputContext::m_gameControllers[id] = HCPGameController(id, name);
+    }
 }

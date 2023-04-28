@@ -58,9 +58,9 @@ HCPInputContext* hcpui::getInputContext()
 
 void hcpui::setupUIRendering()
 {
-    glm::mat4 projection = glm::ortho(0.0f, (float) i_windowWidth, (float) i_windowHeight, 0.0f, -1.0f, 1.0f);
+    glm::mat4 projection = glm::ortho(0.0f, (float) i_windowWidth, (float) i_windowHeight, 0.0f, -1000.0f, 1000.0f);
     hcps::setProjectionMatrix(projection);
-    hcps::setModelViewMatrix(i_batchMeshBuilder->getModelView());
+    hcps::setModelViewMatrix(glm::mat4(1.0f));
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -175,7 +175,7 @@ void hcpui::genString(const char* str, float x, float y, float scale, const glm:
 
 void hcpui::genDisc(float x, float y, float radius, const glm::vec4& color, int resolution, int texID)
 {
-    if(resolution < 0) resolution = int(radius * 0.5);
+    if(resolution < 0) resolution = int(radius * 0.7f);
     resolution = glm::max(resolution, 3);
 
     float angle = 0.0f;

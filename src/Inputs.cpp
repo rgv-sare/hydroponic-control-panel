@@ -202,12 +202,12 @@ float HCPInputContext::scrollDeltaY() const
     return m_scrollDeltaY;
 }
 
-int HCPInputContext::numGameControllers() const
+int HCPInputContext::numGameControllers()
 {
     return m_numGameControllers;
 }
 
-const HCPGameController& HCPInputContext::getGameController(int id) const
+const HCPGameController& HCPInputContext::getGameController(int id)
 {
     return m_gameControllers[id];
 }

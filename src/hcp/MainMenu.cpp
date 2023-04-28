@@ -253,10 +253,6 @@ void HCPMainMenu::drawRobotArmView()
         modelview = glm::rotate(modelview, glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f));
         
         hcps::setModelViewMatrix(modelview);
-        HCPRobotRenderer::setX(m_robX);
-        HCPRobotRenderer::setY(m_robY);
-        HCPRobotRenderer::setSwivel(m_robSwivel);
-        HCPRobotRenderer::setClaw(m_robClaw);
         HCPRobotRenderer::drawArm();
         hcpui::setupUIRendering();
 

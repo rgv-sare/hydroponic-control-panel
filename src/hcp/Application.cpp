@@ -6,6 +6,7 @@
 
 #include "hcp/Resources.hpp"
 #include "hcp/MainMenu.hpp"
+#include "hcp/RobotRenderer.hpp"
 
 HCPLogger mainLogger("Main");
 
@@ -34,6 +35,8 @@ void HCPApplication::setup()
     m_inputContext = hcpi::registerWindow(m_window);
     hcpui::init(m_window);
 
+    HCPRobotRenderer::init();
+
     loadResources();
     setCurrentScreen(new HCPMainMenu());
 }
@@ -42,7 +45,7 @@ void HCPApplication::loop()
 {
     glViewport(0, 0, hcpui::getWindowWidth(), hcpui::getWindowHeight());
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if(m_currentScreen)
         m_currentScreen->draw();
@@ -56,8 +59,9 @@ void HCPApplication::loop()
 void HCPApplication::terminate()
 {
     mainLogger.infof("Terminating GLFW window");
-
     glfwTerminate();
+
+    HCPRobotRenderer::terminate();
 }
 
 bool HCPApplication::shouldClose() const
@@ -86,4 +90,6 @@ void HCPApplication::loadResources()
     mainLogger.infof("Loading Resources");
 
     hcpr::addImage(hcpimg::loadImage("res/texture.png"), "nasa_minds_logo");
+
+    HCPRobotRenderer::loadResources();
 }

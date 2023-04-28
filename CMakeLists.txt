@@ -43,6 +43,7 @@ add_executable(${PROJECT_NAME}
     src/hcp/Resources.cpp
     src/hcp/SelectionWindow.cpp
     src/hcp/MainMenu.cpp
+    src/hcp/RobotRenderer.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

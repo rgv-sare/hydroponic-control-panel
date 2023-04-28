@@ -1,8 +1,12 @@
 #include "hcp/MainMenu.hpp"
 
+#include "hcp/RobotRenderer.hpp"
+
 #include "UIRender.hpp"
+#include "Shaders.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <cstring>
 
 HCPMainMenu::HCPMainMenu() :
@@ -73,6 +77,14 @@ void HCPMainMenu::draw()
     HCPUIWindow::drawWindows();
 
     hcpui::renderBatch();
+
+    glEnable(GL_DEPTH_TEST);
+
+    glm::mat4 projection = glm::ortho(-48.0f, 48.0f, -18.0f, 36.0f, -50.0f, 50.0f);
+    glm::mat4 modelView = glm::rotate(glm::mat4(1.0f), (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+    hcps::setProjectionMatrix(projection);
+    hcps::setModelViewMatrix(modelView);
+    HCPRobotRenderer::drawAll();
 
     handleInput();
 }

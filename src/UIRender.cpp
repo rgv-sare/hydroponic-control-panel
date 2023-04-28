@@ -109,6 +109,13 @@ void hcpui::genString(const char* str, float x, float y, float scale, uint32_t c
     genString(HCPAlignment::TOP_LEFT, str, x, y, scale, colorVec);
 }
 
+void hcpui::genDisc(float x, float y, float radius, uint32_t color, int resolution, int texID)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genDisc(x, y, radius, colorVec, resolution, texID);
+}
+
 void hcpui::genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID)
 {
     i_batchMeshBuilder->index(6, 0, 1, 2, 0, 2, 3);
@@ -164,6 +171,42 @@ void hcpui::genString(const char* str, float x, float y, float scale, const glm:
     i_fontRenderer.setAnchor(HCPAlignment::TOP_LEFT);
     i_fontRenderer.setTextSize(scale);
     i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
+}
+
+void hcpui::genDisc(float x, float y, float radius, const glm::vec4& color, int resolution, int texID)
+{
+    if(resolution < 0) resolution = int(radius * 0.5);
+    resolution = glm::max(resolution, 3);
+
+    float angle = 0.0f;
+    const float angleStep = glm::two_pi<float>() / resolution;
+
+    // Center Vertex
+    i_batchMeshBuilder->vertex(NULL, x, y, 0.0f, 0.5f, 0.5f, vec4Color(color), texID);
+
+    // TODO: Create disc without creating duplicate vertices
+    // TODO: Calculate correct texture coordinates
+    int centerVertexIndex = -1;
+
+    for(int i = 0; i < resolution; ++i)
+    {
+        float x1 = glm::cos(angle) * radius + x;
+        float y1 = glm::sin(angle) * radius + y;
+        float x2 = glm::cos(angle + angleStep) * radius + x;
+        float y2 = glm::sin(angle + angleStep) * radius + y;
+        float u1 = glm::cos(angle - glm::pi<float>()) * 0.5f + 0.5f;
+        float v1 = glm::sin(angle - glm::pi<float>()) * 0.5f + 0.5f;
+        float u2 = glm::cos(angle + angleStep - glm::pi<float>()) * 0.5f + 0.5f;
+        float v2 = glm::sin(angle + angleStep - glm::pi<float>()) * 0.5f + 0.5f;
+
+        i_batchMeshBuilder->index(3, centerVertexIndex, 0, 1);
+
+        i_batchMeshBuilder->vertex(NULL, x1, y1, 0.0f, u1, v1, vec4Color(color), texID);
+        i_batchMeshBuilder->vertex(NULL, x2, y2, 0.0f, u2, v2, vec4Color(color), texID);
+
+        angle += angleStep;
+        centerVertexIndex -= 2;
+    }
 }
 
 void hcpui::renderBatch()

@@ -32,6 +32,7 @@ public:
     static void genHorizontalLine(float y, float left, float right, uint32_t color, float width = 1.0f);
     static void genString(HCPAlignment alignment, const char* str, float x, float y, float scale, uint32_t color);
     static void genString(const char* str, float x, float y, float scale, uint32_t color);
+    static void genDisc(float x, float y, float radius, uint32_t color, int resloution = -1, int texID = 0);
 
     static void genQuad(float left, float top, float right, float bottom, const glm::vec4& color, int texID = 0);
     static void genGradientQuad(HCPDirection direction, float left, float top, float right, float bottom, const glm::vec4& color1, const glm::vec4& color2, int texID = 0);
@@ -39,7 +40,8 @@ public:
     static void genHorizontalLine(float y, float left, float right, const glm::vec4& color, float width = 1.0f);
     static void genString(HCPAlignment alignment, const char* str, float x, float y, float scale,  const glm::vec4& color);
     static void genString(const char* str, float x, float y, float scale, const glm::vec4& color);
-    
+    static void genDisc(float x, float y, float radius, const glm::vec4& color, int resloution = -1, int texID = 0);
+
     static void renderBatch();
 
     static float getStringwidth(const char* str, float scale);

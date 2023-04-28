@@ -25,6 +25,8 @@ static float robotClaw = 0.0f;
 struct RobotPart
 {
     RobotPart* parent = nullptr;
+    glm::vec3 translation;
+    glm::vec3 additionalRotation;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -34,10 +36,10 @@ struct RobotPart
     void draw(glm::mat4 modelView = glm::mat4(1.0f))
     {
         glm::mat4 model = modelView;
-        model = glm::translate(model, position);
-        model = glm::rotate(model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, position + translation);
+        model = glm::rotate(model, rotation.x + additionalRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, rotation.y + additionalRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, rotation.z + additionalRotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::scale(model, glm::vec3(scale.x, scale.y, scale.z));
 
         hcps::setModelViewMatrix(model);
@@ -117,14 +119,68 @@ namespace HCPRobotRenderer
     {
         if(i_adviseInit("drawAll")) return;
 
-        if(robotBase) robotBase->draw(hcps::getModelViewMatrix());
+        if(robotParts.find("wheel.001") != robotParts.end())
+            robotParts["wheel.001"]->rotation.z = -robotX / 3.0f;
+
+        if(robotParts.find("swivel_gear1") != robotParts.end())
+            robotParts["swivel_gear1"]->rotation.y = -robotSwivel * 1.5f;
+
+        if(robotArm)
+            robotArm->rotation.y = robotSwivel;
+
+        if(robotParts.find("claw_gear1") != robotParts.end())
+            robotParts["claw_gear1"]->additionalRotation.y = robotClaw * 2.83f;
+
+        if(robotParts.find("claw_gear2") != robotParts.end())
+            robotParts["claw_gear2"]->additionalRotation.y = -robotClaw * 4.245f;
+
+        if(robotParts.find("claw_gear3") != robotParts.end())
+            robotParts["claw_gear3"]->additionalRotation.y = robotClaw * 8.49f;
+
+        if(robotParts.find("claw_gear4") != robotParts.end())
+            robotParts["claw_gear4"]->additionalRotation.y = -robotClaw * 8.49f;
+
+        if(robotParts.find("claw") != robotParts.end())
+            robotParts["claw"]->translation.x = -robotClaw * 4.245f;
+
+        if(robotParts.find("claw_jaw") != robotParts.end())
+            robotParts["claw_jaw"]->translation.x = robotClaw * 8.49f;
+
+        if(robotBase)
+        {
+            glm::mat4 modelview = hcps::getModelViewMatrix();
+            modelview = glm::translate(modelview, glm::vec3(robotX, robotY, 0.0f));
+            robotBase->draw(modelview);
+        }
     }
 
     void drawArm()
     {
         if(i_adviseInit("drawArm")) return;
 
-        if(robotArm) robotArm->draw(hcps::getModelViewMatrix());
+        if(robotParts.find("claw_gear1") != robotParts.end())
+            robotParts["claw_gear1"]->additionalRotation.y = robotClaw * 2.83f;
+
+        if(robotParts.find("claw_gear2") != robotParts.end())
+            robotParts["claw_gear2"]->additionalRotation.y = -robotClaw * 4.245f;
+            
+        if(robotParts.find("claw_gear3") != robotParts.end())
+            robotParts["claw_gear3"]->additionalRotation.y = robotClaw * 8.49f;
+
+        if(robotParts.find("claw_gear4") != robotParts.end())
+            robotParts["claw_gear4"]->additionalRotation.y = -robotClaw * 8.49f;
+
+        if(robotParts.find("claw") != robotParts.end())
+            robotParts["claw"]->translation.x = -robotClaw * 4.245f;
+
+        if(robotParts.find("claw_jaw") != robotParts.end())
+            robotParts["claw_jaw"]->translation.x = robotClaw * 8.49f;
+
+        if(robotArm)
+        {
+            robotArm->rotation.y = robotSwivel;
+            robotArm->draw(hcps::getModelViewMatrix());
+        }
     }
 
     void setX(float x)
@@ -165,6 +221,14 @@ namespace HCPRobotRenderer
     float getClaw()
     {
         return robotClaw;
+    }
+
+    void reset()
+    {
+        robotX = 0.0f;
+        robotY = 0.0f;
+        robotSwivel = 0.0f;
+        robotClaw = 0.0f;
     }
 }
 

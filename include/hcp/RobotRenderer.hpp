@@ -20,6 +20,8 @@ namespace HCPRobotRenderer
     float getY();
     float getSwivel();
     float getClaw();
+
+    void reset();
 } // namespace HCPRobotRenderer
 
 

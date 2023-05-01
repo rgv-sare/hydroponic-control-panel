@@ -1,6 +1,7 @@
 #ifndef HCP_INPUTS_HPP
 #define HCP_INPUTS_HPP
 
+#define GLFW_INCLUDE_NONE
 #include <glfw/glfw3.h>
 
 #include <map>
@@ -72,6 +73,9 @@ public:
     float scrollDeltaX() const;
     float scrollDeltaY() const;
 
+    bool charWasTyped() const;
+    uint32_t getTypedChar() const;
+
     static int numGameControllers();
     static const HCPGameController& getGameController(int index);
 private:
@@ -99,6 +103,9 @@ private:
 
     bool m_justScrolled;
 
+    bool m_charTyped;
+    uint32_t m_typedChar;
+
     static int m_numGameControllers;
     static HCPGameController m_gameControllers[16];
 
@@ -107,6 +114,7 @@ private:
     friend void onMouseEvent(GLFWwindow* window, int button, int action, int mods);
     friend void onCursorMove(GLFWwindow* window, double cursorX, double cursorY);
     friend void onScroll(GLFWwindow* window, double scrollX, double scrollY);
+    friend void onCharTyped(GLFWwindow* window, uint32_t typedChar);
     friend void onControllerConnect(int id, int event);
 };
 

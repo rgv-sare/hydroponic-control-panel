@@ -11,6 +11,7 @@ static void onKeyEvent(GLFWwindow* window, int key, int scancode, int action, in
 static void onMouseEvent(GLFWwindow* window, int button, int action, int mods);
 static void onCursorMove(GLFWwindow* window, double cursorX, double cursorY);
 static void onScroll(GLFWwindow* window, double scrollX, double scrollY);
+static void onCharTyped(GLFWwindow* window, uint32_t typedChar);
 static void onControllerConnect(int id, int event);
 
 static void i_setNthBit(uint32_t* flagBuffer, int bit);
@@ -202,6 +203,16 @@ float HCPInputContext::scrollDeltaY() const
     return m_scrollDeltaY;
 }
 
+bool HCPInputContext::charWasTyped() const
+{
+    return m_charTyped;
+}
+
+uint32_t HCPInputContext::getTypedChar() const
+{
+    return m_typedChar;
+}
+
 int HCPInputContext::numGameControllers()
 {
     return m_numGameControllers;
@@ -228,7 +239,9 @@ HCPInputContext::HCPInputContext(GLFWwindow* window) :
     m_cursorPosY(0.0f),
     m_scrollDeltaX(0.0f),
     m_scrollDeltaY(0.0f),
-    m_justScrolled(false)
+    m_justScrolled(false),
+    m_charTyped(false),
+    m_typedChar(0)
 {
     memset(m_keyHeldStates, 0, sizeof(m_keyHeldStates));
     memset(m_keyPressedStates, 0, sizeof(m_keyPressedStates));
@@ -247,6 +260,7 @@ HCPInputContext* hcpi::registerWindow(GLFWwindow* window)
     glfwSetMouseButtonCallback(window, onMouseEvent);
     glfwSetCursorPosCallback(window, onCursorMove);
     glfwSetScrollCallback(window, onScroll);
+    glfwSetCharCallback(window, onCharTyped);
 
     if(!i_controllerCallbackSet)
     {
@@ -313,6 +327,7 @@ void hcpi::update()
         context.m_prevCursorPosX = context.m_cursorPosX;
         context.m_prevCursorPosY = context.m_cursorPosY;
         context.m_justScrolled = false;
+        context.m_charTyped = false;
     }
 
     for(int j = 0; j < 16; j++)
@@ -416,6 +431,15 @@ static void onScroll(GLFWwindow* window, double scrollX, double scrollY)
     context->m_scrollDeltaX = (float) scrollX;
     context->m_scrollDeltaY = (float) scrollY;
     context->m_justScrolled = true;
+}
+
+static void onCharTyped(GLFWwindow* window, uint32_t typedChar)
+{
+    HCPInputContext* context = hcpi::get(window);
+    if(!context) return;
+
+    context->m_charTyped = true;
+    context->m_typedChar = typedChar;
 }
 
 static void onControllerConnect(int id, int event)

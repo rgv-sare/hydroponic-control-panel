@@ -10,3 +10,6 @@
 [submodule "dep/json"]
 	path = dep/json
 	url = https://github.com/nlohmann/json.git
+[submodule "dep/serial"]
+	path = dep/serial
+	url = https://github.com/wjwwood/serial.git

@@ -228,6 +228,12 @@ float hcpui::getStringwidth(const char* str, float scale)
     return i_fontRenderer.getStringWidth(str);
 }
 
+float hcpui::getStringwidth(const char* str, size_t length, float scale)
+{
+    i_fontRenderer.setTextSize(scale);
+    return i_fontRenderer.getStringWidth(str, length);
+}
+
 int hcpui::getWindowWidth()
 {
     return i_windowWidth;
@@ -261,6 +267,11 @@ float hcpui::getUICursorX()
 float hcpui::getUICursorY()
 {
     return i_inputContext->cursorY() / i_uiScale;
+}
+
+HCPFontRenderer* hcpui::getFontRenderer()
+{
+    return &i_fontRenderer;
 }
 
 void hcpui::pushStack()

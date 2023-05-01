@@ -45,6 +45,7 @@ public:
     static void renderBatch();
 
     static float getStringwidth(const char* str, float scale);
+    static float getStringwidth(const char* str, size_t length, float scale);
 
     static int getWindowWidth();
     static int getWindowHeight();
@@ -55,6 +56,8 @@ public:
 
     static float getUICursorX();
     static float getUICursorY();
+
+    static HCPFontRenderer* getFontRenderer();
 
     static void pushStack();
     static void popStack();

@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
     src/Mesh.cpp
     src/UIWindow.cpp
     src/Animation.cpp
+    src/TextField.cpp
 
     src/hcp/Application.cpp
     src/hcp/StartMenu.cpp

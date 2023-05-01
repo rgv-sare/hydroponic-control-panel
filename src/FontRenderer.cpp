@@ -238,6 +238,46 @@ void HCPFontRenderer::genString(HCPMeshBuilder& meshBuilder, const char* str, si
     }
 }
 
+int HCPFontRenderer::charsToFit(const char* str, float width) const
+{
+    return charsToFit(str, strlen(str), width);
+}
+
+int HCPFontRenderer::charsToFit(const char* str, size_t strLen, float width) const
+{
+    int chars = 0;
+    float xCursor = 0;
+
+    for(int i = 0; i < strLen;)
+    {
+        int bytesRead = 0;
+        int unicode = getUnicodeFromUTF8((const uint8_t*) &str[i], &bytesRead);
+
+        if(unicode == 167 && i + bytesRead < strLen)
+        {
+            i++;
+        }
+        else
+        {
+            Glyph glyph = m_font.glyphs[unicode];
+
+            float advance = (glyph.xAdvance - m_font.leftPadding - m_font.rightPadding) * m_scale;
+
+            if(xCursor + advance > width)
+            {
+                return chars;
+            }
+
+            xCursor += advance;
+            chars++;
+        }
+
+        i += bytesRead;
+    }
+
+    return chars;
+}
+
 void HCPFontRenderer::bindAtlas()
 {
     if(!m_isRenderable)

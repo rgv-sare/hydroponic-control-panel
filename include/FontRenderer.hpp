@@ -70,6 +70,9 @@ public:
     void genString(HCPMeshBuilder& meshBuilder, const char* str, float x, float y, const glm::vec4& color);
     void genString(HCPMeshBuilder& meshBuilder, const char* str, size_t strLen, float x, float y, const glm::vec4& color);
 
+    int charsToFit(const char* str, float width) const;
+    int charsToFit(const char* str, size_t strLen, float width) const;
+
     void bindAtlas();
 
     void setAtlasTexUnit(int texUnit);

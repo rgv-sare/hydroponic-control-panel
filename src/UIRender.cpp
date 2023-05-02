@@ -109,6 +109,20 @@ void hcpui::genString(const char* str, float x, float y, float scale, uint32_t c
     genString(HCPAlignment::TOP_LEFT, str, x, y, scale, colorVec);
 }
 
+void hcpui::genString(HCPAlignment alignment, const char* str, size_t strLen, float x, float y, float scale, uint32_t color)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genString(alignment, str, strLen, x, y, scale, colorVec);
+}
+
+void hcpui::genString(const char* str, size_t strLen, float x, float y, float scale, uint32_t color)
+{
+    glm::vec4 colorVec = getVec4Color(color);
+
+    genString(HCPAlignment::TOP_LEFT, str, strLen, x, y, scale, colorVec);
+}
+
 void hcpui::genDisc(float x, float y, float radius, uint32_t color, int resolution, int texID)
 {
     glm::vec4 colorVec = getVec4Color(color);
@@ -171,6 +185,20 @@ void hcpui::genString(const char* str, float x, float y, float scale, const glm:
     i_fontRenderer.setAnchor(HCPAlignment::TOP_LEFT);
     i_fontRenderer.setTextSize(scale);
     i_fontRenderer.genString(*i_batchMeshBuilder, str, x, y, color);
+}
+
+void hcpui::genString(HCPAlignment alignment, const char* str, size_t strLen, float x, float y, float scale, const glm::vec4& color)
+{
+    i_fontRenderer.setAnchor(alignment);
+    i_fontRenderer.setTextSize(scale);
+    i_fontRenderer.genString(*i_batchMeshBuilder, str, strLen, x, y, color);
+}
+
+void hcpui::genString(const char* str, size_t strLen, float x, float y, float scale, const glm::vec4& color)
+{
+    i_fontRenderer.setAnchor(HCPAlignment::TOP_LEFT);
+    i_fontRenderer.setTextSize(scale);
+    i_fontRenderer.genString(*i_batchMeshBuilder, str, strLen, x, y, color);
 }
 
 void hcpui::genDisc(float x, float y, float radius, const glm::vec4& color, int resolution, int texID)

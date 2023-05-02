@@ -164,12 +164,14 @@ void HCPMainMenu::drawConsole()
 
         console.start(true);
         {
-            hcpui::translate(0, console.height + m_consoleLogScroll * 14);
-
+            float y = console.height + m_consoleLogScroll * 14;
             for(auto i = m_consoleLines.rbegin(); i != m_consoleLines.rend(); i++)
             {
-                hcpui::genString(HCPAlignment::BOTTOM_LEFT, i->first, i->second, 0, 0, 14, 0xFFFFFFFF);
-                hcpui::translate(0, -14);
+                // Draw line if it is in the viewport
+                if(y > -14 && y < console.height + 14)
+                    hcpui::genString(HCPAlignment::BOTTOM_LEFT, i->first, i->second, 0, y, 14, 0xFFFFFFFF);
+
+                y -= 14;
             }
         }
         console.end();

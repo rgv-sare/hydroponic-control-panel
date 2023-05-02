@@ -26,6 +26,7 @@ void HCPViewport::start(bool clipping)
         m_wasClipping = true;
 
         hcpui::renderBatch(); // Render and flush the batch before writing to the stencil buffer
+        glClear(GL_STENCIL_BUFFER_BIT);
         glEnable(GL_STENCIL_TEST);
         glStencilMask(0xFF);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);

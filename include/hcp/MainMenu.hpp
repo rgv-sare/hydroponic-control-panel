@@ -7,6 +7,9 @@
 #include "UIWindow.hpp"
 #include "Viewport.hpp"
 #include "Button.hpp"
+#include "TextField.hpp"
+
+#include <array>
 
 class HCPMainMenu : public HCPScreen
 {
@@ -36,6 +39,14 @@ private:
     HCPButton m_manualControlButton;
     bool m_manualControlEnabled;
 
+    int m_consoleLogScroll;
+    size_t m_consoleLogLen;
+    size_t m_consoleLogIndex;
+    std::vector<std::pair<const char*, size_t>> m_consoleLines;
+    std::array<char, 2049> m_consoleLog;
+    HCPButton m_commandSendButton;
+    HCPTextField m_consoleCommandField;
+
     JoyStickVisual m_xyJoystick;
     JoyStickVisual m_clawJoystick;
 
@@ -48,6 +59,8 @@ private:
     void drawRobotView();
     void drawRobotArmView();
     void handleInput();
+
+    void addConsoleLog(const char* log);
 };
 
 #endif // HCP_MAIN_MENU_HPP

@@ -8,12 +8,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cstring>
+#include <algorithm>
+#include <iostream>
 
 static const int edgeSize = 5;
 
 HCPMainMenu::HCPMainMenu() :
     HCPScreen(Type::MAIN_MENU, "Main Menu"),
-    m_manualControlEnabled(true)
+    m_manualControlEnabled(true),
+    m_consoleLogScroll(0),
+    m_consoleLogIndex(0),
+    m_consoleLogLen(0)
 {
     snprintf(m_splashText, 256, "Hydroponic Control Panel - %s", hcpr::getAppVersion());
 
@@ -26,12 +31,16 @@ HCPMainMenu::HCPMainMenu() :
     m_clawJoystick.axesLabels[3] = "Close";
 
     m_robX = m_robY = m_robSwivel = m_robClaw = 0.0f;
+
+    m_consoleLog.fill(0);
 }
 
 void HCPMainMenu::setup()
 {
     m_nasaMindsLogo = hcpr::getImage("nasa_minds_logo");
     m_manualControlButton.setText("Manual Control: §2On");
+    m_commandSendButton.setText(">");
+    m_consoleCommandField.setTitle("Command");
 }
 
 void HCPMainMenu::draw()
@@ -130,6 +139,51 @@ void HCPMainMenu::drawConsole()
             hcpui::genString("Console", edgeSize, edgeSize, consoleHeaderViewport.height - edgeSize * 2, 0xFFFFFFFF);
         }
         consoleHeaderViewport.end();
+
+        m_consoleCommandField.height = consoleHeaderViewport.height * 0.9f;
+        m_consoleCommandField.width = consoleViewport.width - m_consoleCommandField.height;
+        m_consoleCommandField.x = m_consoleCommandField.height;
+        m_consoleCommandField.y = consoleViewport.height - m_consoleCommandField.height;
+
+        m_consoleCommandField.draw();
+
+        m_commandSendButton.width = m_consoleCommandField.height;
+        m_commandSendButton.height = m_consoleCommandField.height;
+        m_commandSendButton.y = m_consoleCommandField.y;
+
+        hcpui::genGradientQuad
+        (HCPDirection::BOTTOM, 0, m_consoleCommandField.y, m_consoleCommandField.height, consoleViewport.height, 0x88FFFFFF, 0x00FFFFFF);
+
+        m_commandSendButton.draw();
+
+        HCPViewport console;
+        console.width = consoleViewport.width - edgeSize * 2;
+        console.height = consoleViewport.height - consoleHeaderViewport.height - m_consoleCommandField.height - edgeSize * 2;
+        console.x = edgeSize;
+        console.y = consoleHeaderViewport.height + edgeSize;
+
+        console.start(true);
+        {
+            hcpui::translate(0, console.height + m_consoleLogScroll * 14);
+
+            for(auto i = m_consoleLines.rbegin(); i != m_consoleLines.rend(); i++)
+            {
+                hcpui::genString(HCPAlignment::BOTTOM_LEFT, i->first, i->second, 0, 0, 14, 0xFFFFFFFF);
+                hcpui::translate(0, -14);
+            }
+        }
+        console.end();
+
+        HCPInputContext* input = hcpi::get();
+        if(console.isHovered() && input->justScrolled())
+        {
+            if(0 < input->scrollDeltaY()) m_consoleLogScroll++;
+            else m_consoleLogScroll--;
+        }
+        if(console.isHovered() && (input->iskeyPressed(GLFW_KEY_UP) || input->iskeyRepeating(GLFW_KEY_UP))) m_consoleLogScroll++;
+        if(console.isHovered() && (input->iskeyPressed(GLFW_KEY_DOWN) || input->iskeyRepeating(GLFW_KEY_DOWN))) m_consoleLogScroll--;
+
+        m_consoleLogScroll = std::max(0, std::min(m_consoleLogScroll, (int)m_consoleLines.size() - 1));
     }
     consoleViewport.end();
 }
@@ -309,6 +363,60 @@ void HCPMainMenu::handleInput()
         m_manualControlEnabled = !m_manualControlEnabled;
         m_manualControlButton
         .setText(m_manualControlEnabled && m_manualControlButton.isEnabled() ? "Manual Control: §2On" : "Manual Control: §4Off");
+    }
+
+    HCPInputContext* input = hcpi::get();
+    if(m_commandSendButton.isPressed() || (m_consoleCommandField.isFocused() && input->iskeyPressed(GLFW_KEY_ENTER)))
+    {
+        if(strcmp(m_consoleCommandField.getText(), "clear") == 0)
+        {
+            m_consoleLogLen = 0;
+            m_consoleLogIndex = 0;
+            m_consoleLog.fill(0);
+            return;
+        }
+
+        char command[512];
+        snprintf(command, 512, "%s\n", m_consoleCommandField.getText());
+        addConsoleLog(command);
+    }
+}
+
+void HCPMainMenu::addConsoleLog(const char* log)
+{
+    int newLogLen = (int) strlen(log);
+
+    for(int i = 0; i < newLogLen; i++)
+    {
+        m_consoleLogIndex = m_consoleLogIndex % (m_consoleLog.size() - 1);
+        m_consoleLog[m_consoleLogIndex] = log[i];
+        m_consoleLogIndex++;
+        m_consoleLogLen++;
+    }
+
+    if(m_consoleLog.size() - 1 < m_consoleLogLen)
+    {
+        std::rotate(m_consoleLog.begin(), m_consoleLog.begin() + m_consoleLogIndex, m_consoleLog.end() - 1);
+
+        m_consoleLogIndex = 0;
+    }
+
+    if(!newLogLen) return;
+
+    const char* line = m_consoleLog.data();
+    size_t lineLen = 0;
+    m_consoleLines.clear();
+    for(int i = 0; i < m_consoleLog.size() - 1; i++)
+    {
+        if(m_consoleLog[i] == '\n' || m_consoleLog[i] == '\r' || m_consoleLog[i] == '\0')
+        {
+            if(lineLen) m_consoleLines.emplace_back(line, lineLen);
+            line = m_consoleLog.data() + i + 1;
+            lineLen = 0;
+
+            if(m_consoleLog[i] == '\0') break;
+        }
+        else lineLen++;
     }
 }
 

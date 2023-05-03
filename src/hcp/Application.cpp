@@ -5,6 +5,7 @@
 #include "Images.hpp"
 
 #include "hcp/Resources.hpp"
+#include "hcp/StartMenu.hpp"
 #include "hcp/MainMenu.hpp"
 #include "hcp/RobotRenderer.hpp"
 
@@ -38,7 +39,7 @@ void HCPApplication::setup()
     HCPRobotRenderer::init();
 
     loadResources();
-    setCurrentScreen(new HCPMainMenu());
+    setCurrentScreen(new HCPStartMenu());
 }
 
 void HCPApplication::loop()

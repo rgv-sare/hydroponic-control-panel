@@ -19,7 +19,11 @@ public:
     bool shouldClose() const;
 
     void setCurrentScreen(HCPScreen* screen);
+
+    static HCPApplication* getInstance();
 private:
+    static HCPApplication* s_instance;
+
     const char* m_title;
     bool m_shouldClose;
 

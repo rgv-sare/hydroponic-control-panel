@@ -11,12 +11,21 @@
 
 HCPLogger mainLogger("Main");
 
+HCPApplication* HCPApplication::s_instance = nullptr;
+
 HCPApplication::HCPApplication(const char* title) :
     m_title(title),
     m_shouldClose(false),
     m_currentScreen(nullptr)
 {
+    if(s_instance)
+    {
+        mainLogger.errorf("HCPApplication already exists");
+        m_shouldClose = true;
+        return;
+    }
 
+    s_instance = this;
 }
 
 void HCPApplication::setup()
@@ -84,6 +93,11 @@ void HCPApplication::setCurrentScreen(HCPScreen* screen)
         screen->setup();
 
     m_currentScreen = screen;
+}
+
+HCPApplication* HCPApplication::getInstance()
+{
+    return s_instance;
 }
 
 void HCPApplication::loadResources()

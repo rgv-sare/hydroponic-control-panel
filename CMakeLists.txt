@@ -45,14 +45,23 @@ add_executable(${PROJECT_NAME}
     src/hcp/SelectionWindow.cpp
     src/hcp/MainMenu.cpp
     src/hcp/RobotRenderer.cpp
+    src/hcp/SerialUtil.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
+#List of libraries to link
+set(LIBS
     glfw
     glad
     assimp
     nlohmann_json::nlohmann_json
 )
+
+#Link Setupapi on windows
+if(WIN32)
+    list(APPEND LIBS Setupapi)
+endif()
+
+target_link_libraries(${PROJECT_NAME} ${LIBS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include

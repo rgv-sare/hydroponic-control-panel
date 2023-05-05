@@ -1,4 +1,4 @@
-#ifndef HCP_ANIMATION_HPPclass
+#ifndef HCP_ANIMATION_HPP
 #define HCP_ANIMATION_HPP
 
 class HCPSmoother

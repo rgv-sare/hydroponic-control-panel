@@ -48,6 +48,7 @@ add_executable(${PROJECT_NAME}
     src/hcp/Serial.cpp
     src/hcp/Serial_Windows.cpp
     src/hcp/Serial_Linux.cpp
+    src/hcp/SystemInterface.cpp
 )
 
 #List of libraries to link

@@ -303,15 +303,13 @@ int HCPFontRenderer::getTexUnit() const
 int HCPFontRenderer::getUnicodeFromUTF8(const uint8_t* str, int* bytesRead) const
 {
     int unicode = 0;
+    *bytesRead = 1;
 
-    if(*str < 128)
-    {
-        *bytesRead = 1;
-        return *str;
-    }
+    if(*str < 128) return *str;
     else if((*str & 224) == 192) * bytesRead = 2;
     else if((*str & 240) == 224) * bytesRead = 3;
     else if((*str & 248) == 240) * bytesRead = 4;
+    else return *str;
 
     switch(*bytesRead)
     {

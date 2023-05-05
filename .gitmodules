@@ -13,3 +13,6 @@
 [submodule "dep/serial"]
 	path = dep/serial
 	url = https://github.com/wjwwood/serial.git
+[submodule "dep/catkin"]
+	path = dep/catkin
+	url = https://github.com/ros/catkin.git

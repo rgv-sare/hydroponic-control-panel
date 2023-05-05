@@ -1,5 +1,5 @@
-#ifndef HCP_MAIN_MENU_HPP
-#define HCP_MAIN_MENU_HPP
+#ifndef HCP_START_MENU_HPP
+#define HCP_START_MENU_HPP
 
 #include "hcp/Screen.hpp"
 #include "hcp/Resources.hpp"
@@ -23,6 +23,7 @@ private:
     HCPButton m_selectSerialPortButton;
     HCPButton m_okButton;
 
+    std::vector<char*> m_serialPorts;
     std::weak_ptr<HCPSelectionWindow> m_serialPortSelectionWindow;
 
     char m_splashText[256];
@@ -32,4 +33,4 @@ private:
     void handleInput();
 };
 
-#endif // HCP_MAIN_MENU_HPP
+#endif // HCP_START_MENU_HPP

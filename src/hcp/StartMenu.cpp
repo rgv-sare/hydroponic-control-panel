@@ -4,9 +4,13 @@
 #include <cstring>
 
 #include "UIRender.hpp"
+#include "hcp/Serial.hpp"
+#include "hcp/Application.hpp"
+#include "hcp/MainMenu.hpp"
 
 HCPStartMenu::HCPStartMenu() :
-    HCPScreen(Type::START_MENU, "Start Menu")
+    HCPScreen(Type::START_MENU, "Start Menu"),
+    m_selectedSerialPort(-1)
 {
     snprintf(m_splashText, 256, "Hydroponics Control Panel - %s", hcpr::getAppVersion());
 }
@@ -16,6 +20,16 @@ void HCPStartMenu::setup()
     m_nasaMindsLogo = hcpr::getImage("nasa_minds_logo");
     m_selectSerialPortButton.setText("§7Unselected");
     m_okButton.setText("OK");
+
+    std::vector<std::string> serialPorts = HCPSerial::getSerialPorts();
+
+    m_serialPorts.resize(serialPorts.size());
+    for (size_t i = 0; i < serialPorts.size(); i++)
+    {
+        serialPorts[i].push_back('\0');
+        m_serialPorts[i] = new char[serialPorts[i].size()];
+        memcpy(m_serialPorts[i], serialPorts[i].c_str(), serialPorts[i].size());
+    }
 }
 
 void HCPStartMenu::draw()
@@ -83,27 +97,18 @@ void HCPStartMenu::draw()
 
 void HCPStartMenu::close()
 {
-    
+    for(char* portName : m_serialPorts)
+    {
+        delete[] portName;
+    }
 }
 
 void HCPStartMenu::handleInput()
 {
-    const char* ports[8] =
-    {
-        "COM0",
-        "COM1",
-        "COM2",
-        "COM3",
-        "COM4",
-        "COM5",
-        "COM6",
-        "COM7"
-    };
-
     if(m_selectSerialPortButton.isPressed())
     {
         m_serialPortSelectionWindow =
-        HCPUIWindow::createWindow<HCPSelectionWindow>("Select Serial Port", ports, 7, &m_selectedSerialPort);
+        HCPUIWindow::createWindow<HCPSelectionWindow>("Select Serial Port", (const char**) m_serialPorts.data(), (int) m_serialPorts.size(), &m_selectedSerialPort);
     }
 
     if(!m_serialPortSelectionWindow.expired())
@@ -114,8 +119,13 @@ void HCPStartMenu::handleInput()
         {
             serialPortSelectionWindow->setShouldClose(true);
             m_serialPortSelectionWindow.reset();
-            m_selectSerialPortButton.setText(ports[m_selectedSerialPort]);
-            std::cout << "Selected serial port: " << m_selectedSerialPort << std::endl;
+            m_selectSerialPortButton.setText(m_serialPorts[m_selectedSerialPort]);
         }
+    }
+
+    if(m_okButton.isPressed() && m_selectedSerialPort != -1)
+    {
+        HCPMainMenu* mainMenu = new HCPMainMenu(m_serialPorts[m_selectedSerialPort]);
+        HCPApplication::getInstance()->setCurrentScreen(mainMenu);
     }
 }

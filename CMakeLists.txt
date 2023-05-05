@@ -45,7 +45,9 @@ add_executable(${PROJECT_NAME}
     src/hcp/SelectionWindow.cpp
     src/hcp/MainMenu.cpp
     src/hcp/RobotRenderer.cpp
-    src/hcp/SerialUtil.cpp
+    src/hcp/Serial.cpp
+    src/hcp/Serial_Windows.cpp
+    src/hcp/Serial_Linux.cpp
 )
 
 #List of libraries to link
@@ -72,22 +74,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     dep/json/include
 )
 
-#Copy resource files to current binary folder
-if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+# Copy resources to build directory
+add_custom_target(copy_resources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    ${CMAKE_CURRENT_BINARY_DIR}/res
+    COMMENT "Copying resources into binary directory")
 
-    file(GLOB_RECURSE resfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "res/*")
-
-    foreach(resfile ${resfiles})
-    
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_SOURCE_DIR}/${resfile}"
-            "${CMAKE_CURRENT_BINARY_DIR}/${resfile}"
-        )
-
-    endforeach(resfile)
-
-    file(COPY res DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    
-endif()
+add_dependencies(${PROJECT_NAME} copy_resources)

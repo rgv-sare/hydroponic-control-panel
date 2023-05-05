@@ -3,11 +3,13 @@
 
 #include "hcp/Screen.hpp"
 #include "hcp/Resources.hpp"
+#include "hcp/Serial.hpp"
 
 #include "UIWindow.hpp"
 #include "Viewport.hpp"
 #include "Button.hpp"
 #include "TextField.hpp"
+#include "Animation.hpp"
 
 #include <array>
 
@@ -15,6 +17,7 @@ class HCPMainMenu : public HCPScreen
 {
 public:
     HCPMainMenu();
+    HCPMainMenu(const char* comPort);
 
     void setup() override;
     void draw() override;
@@ -39,6 +42,8 @@ private:
     HCPButton m_manualControlButton;
     bool m_manualControlEnabled;
 
+    HCPTimer m_timer;
+    HCPSerial* m_serial;
     int m_consoleLogScroll;
     size_t m_consoleLogLen;
     size_t m_consoleLogIndex;

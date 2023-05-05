@@ -18,7 +18,9 @@ HCPMainMenu::HCPMainMenu() :
     m_manualControlEnabled(true),
     m_consoleLogScroll(0),
     m_consoleLogIndex(0),
-    m_consoleLogLen(0)
+    m_consoleLogLen(0),
+    m_serial(nullptr),
+    m_timer(20.0)
 {
     snprintf(m_splashText, 256, "Hydroponic Control Panel - %s", hcpr::getAppVersion());
 
@@ -35,12 +37,20 @@ HCPMainMenu::HCPMainMenu() :
     m_consoleLog.fill(0);
 }
 
+HCPMainMenu::HCPMainMenu(const char* comPort) :
+    HCPMainMenu()
+{
+    m_serial = new HCPSerial(comPort);
+    m_serial->setTimeout(HCPSerial::Timeout::fromTimeout(2000));
+}
+
 void HCPMainMenu::setup()
 {
     m_nasaMindsLogo = hcpr::getImage("nasa_minds_logo");
     m_manualControlButton.setText("Manual Control: §2On");
     m_commandSendButton.setText(">");
     m_consoleCommandField.setTitle("Command");
+    m_serial->begin();
 }
 
 void HCPMainMenu::draw()
@@ -83,7 +93,7 @@ void HCPMainMenu::draw()
 
 void HCPMainMenu::close()
 {
-
+    m_serial->close();
 }
 
 void HCPMainMenu::drawHeader()
@@ -106,7 +116,13 @@ void HCPMainMenu::drawHeader()
             float titleSize = (headerViewport.height - edgeSize * 2) * 0.35f;
             hcpui::genString("Hydroponics System Control Panel", 4, 4, titleSize, 0x22000000);
             hcpui::genString("Hydroponics System Control Panel", 0, 0, titleSize, 0xFFFFFFFF);
-            hcpui::genString("Serial Port: COM3 §2Online", 0, titleSize + edgeSize * 2, titleSize * 0.68f, 0xFFAAAAAA);
+
+            char serialPortStatus[256];
+            if (m_serial->isOpen())
+                snprintf(serialPortStatus, 256, "Serial Port: %s §2Online", m_serial->getPort());
+            else
+                snprintf(serialPortStatus, 256, "Serial Port: %s §4Offline", m_serial->getPort());
+            hcpui::genString(serialPortStatus, 0, titleSize + edgeSize * 2, titleSize * 0.68f, 0xFFAAAAAA);
             m_manualControlButton.height = titleSize * 0.68f;
             m_manualControlButton.y = titleSize + edgeSize * 3 + titleSize * 0.68f;
             m_manualControlButton.draw();
@@ -358,6 +374,15 @@ void HCPMainMenu::handleInput()
         m_robSwivel -= controller.axis(2) * 0.01f;
         m_robClaw += controller.axis(3) * 0.005f;
         m_robClaw = glm::max(-0.5f, glm::min(m_robClaw, 0.37f));
+
+        if(m_timer.ticksPassed())
+        {
+            uint8_t command[2];
+            command[0] = controller.axis(0) < 0.0f;
+            command[1] = glm::abs(controller.axis(0)) * 255;
+
+            m_serial->write(command, 2);
+        }
     }
 
     if(m_manualControlButton.isPressed())
@@ -381,6 +406,26 @@ void HCPMainMenu::handleInput()
         char command[512];
         snprintf(command, 512, "%s\n", m_consoleCommandField.getText());
         addConsoleLog(command);
+
+        if(m_serial->isOpen())
+            m_serial->write((const uint8_t*) command, strlen(command));
+
+    }
+
+    if(m_serial->isOpen())
+    {   
+        m_serial->poll();
+
+        if(m_serial->available())
+        {
+            char buffer[512];
+            int bytesRead = m_serial->read((uint8_t*) buffer, 512);
+            if(bytesRead > 0)
+            {
+                buffer[bytesRead] = 0;
+                addConsoleLog(buffer);
+            }
+        }
     }
 }
 

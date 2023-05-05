@@ -34,6 +34,31 @@ private:
         void doDraw() override;
     };
 
+    class Console : public HCPWidget
+    {
+    public:
+        Console();
+
+        void addLog(const char* log);
+        void clearLog();
+        const char* getCommand();
+
+        bool commandSendTriggered();
+    protected:
+        void doDraw() override;
+    private:
+        int m_scroll;
+        size_t m_logLen;
+        size_t m_logIndex;
+        std::vector<std::pair<const char*, size_t>> m_lines;
+        std::array<char, 2049> m_log;
+        HCPButton m_sendButton;
+        HCPTextField m_commandField;
+        HCPViewport m_viewport;
+
+        void handleInput();
+    };
+
     char m_splashText[256];
     HCPImagePtr m_nasaMindsLogo;
 
@@ -42,15 +67,8 @@ private:
     HCPButton m_manualControlButton;
     bool m_manualControlEnabled;
 
-    HCPTimer m_timer;
     HCPSerial* m_serial;
-    int m_consoleLogScroll;
-    size_t m_consoleLogLen;
-    size_t m_consoleLogIndex;
-    std::vector<std::pair<const char*, size_t>> m_consoleLines;
-    std::array<char, 2049> m_consoleLog;
-    HCPButton m_commandSendButton;
-    HCPTextField m_consoleCommandField;
+    Console m_console;
 
     JoyStickVisual m_xyJoystick;
     JoyStickVisual m_clawJoystick;
@@ -59,13 +77,10 @@ private:
     float m_robX, m_robY, m_robSwivel, m_robClaw;
 
     void drawHeader();
-    void drawConsole();
     void drawJoysticks();
     void drawRobotView();
     void drawRobotArmView();
     void handleInput();
-
-    void addConsoleLog(const char* log);
 };
 
 #endif // HCP_MAIN_MENU_HPP

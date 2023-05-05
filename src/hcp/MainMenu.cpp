@@ -16,16 +16,13 @@ static const int edgeSize = 5;
 HCPMainMenu::HCPMainMenu() :
     HCPScreen(Type::MAIN_MENU, "Main Menu"),
     m_manualControlEnabled(true),
-    m_consoleLogScroll(0),
-    m_consoleLogIndex(0),
-    m_consoleLogLen(0),
-    m_serial(nullptr),
-    m_timer(20.0)
+    m_serial(nullptr)
 {
     snprintf(m_splashText, 256, "Hydroponic Control Panel - %s", hcpr::getAppVersion());
 
     m_xyJoystick.setText("XY Joystick");
     m_clawJoystick.setText("Claw Joystick");
+    m_console.setText("Console");
 
     m_clawJoystick.axesLabels[0] = "CW";
     m_clawJoystick.axesLabels[1] = "CCW";
@@ -33,8 +30,6 @@ HCPMainMenu::HCPMainMenu() :
     m_clawJoystick.axesLabels[3] = "Close";
 
     m_robX = m_robY = m_robSwivel = m_robClaw = 0.0f;
-
-    m_consoleLog.fill(0);
 }
 
 HCPMainMenu::HCPMainMenu(const char* comPort) :
@@ -48,8 +43,6 @@ void HCPMainMenu::setup()
 {
     m_nasaMindsLogo = hcpr::getImage("nasa_minds_logo");
     m_manualControlButton.setText("Manual Control: §2On");
-    m_commandSendButton.setText(">");
-    m_consoleCommandField.setTitle("Command");
     m_serial->begin();
 }
 
@@ -74,7 +67,11 @@ void HCPMainMenu::draw()
 
         drawHeader();
 
-        drawConsole();
+        m_console.width = m_viewport.width * 0.5f;
+        m_console.height = m_viewport.height * 0.28f;
+        m_console.y = m_viewport.height - m_console.height;
+
+        m_console.draw();
 
         drawJoysticks();
 
@@ -132,78 +129,6 @@ void HCPMainMenu::drawHeader()
         hcpui::popStack();
     }
     headerViewport.end();
-}
-
-void HCPMainMenu::drawConsole()
-{
-    HCPViewport consoleViewport;
-    consoleViewport.width = m_viewport.width * 0.5f;
-    consoleViewport.height = m_viewport.height * 0.28f;
-    consoleViewport.y = m_viewport.height - consoleViewport.height;
-
-    consoleViewport.start(false);
-    {
-        hcpui::genQuad(0, 0, consoleViewport.width, consoleViewport.height, 0x22000000);
-
-        HCPViewport consoleHeaderViewport;
-        consoleHeaderViewport.width = consoleViewport.width;
-        consoleHeaderViewport.height = consoleViewport.height * 0.15f;
-
-        consoleHeaderViewport.start(false);
-        {
-            hcpui::genQuad(0, 0, consoleHeaderViewport.width, consoleHeaderViewport.height, 0x11000000);
-            hcpui::genString("Console", edgeSize, edgeSize, consoleHeaderViewport.height - edgeSize * 2, 0xFFFFFFFF);
-        }
-        consoleHeaderViewport.end();
-
-        m_consoleCommandField.height = consoleHeaderViewport.height * 0.9f;
-        m_consoleCommandField.width = consoleViewport.width - m_consoleCommandField.height;
-        m_consoleCommandField.x = m_consoleCommandField.height;
-        m_consoleCommandField.y = consoleViewport.height - m_consoleCommandField.height;
-
-        m_consoleCommandField.draw();
-
-        m_commandSendButton.width = m_consoleCommandField.height;
-        m_commandSendButton.height = m_consoleCommandField.height;
-        m_commandSendButton.y = m_consoleCommandField.y;
-
-        hcpui::genGradientQuad
-        (HCPDirection::BOTTOM, 0, m_consoleCommandField.y, m_consoleCommandField.height, consoleViewport.height, 0x88FFFFFF, 0x00FFFFFF);
-
-        m_commandSendButton.draw();
-
-        HCPViewport console;
-        console.width = consoleViewport.width - edgeSize * 2;
-        console.height = consoleViewport.height - consoleHeaderViewport.height - m_consoleCommandField.height - edgeSize * 2;
-        console.x = edgeSize;
-        console.y = consoleHeaderViewport.height + edgeSize;
-
-        console.start(true);
-        {
-            float y = console.height + m_consoleLogScroll * 14;
-            for(auto i = m_consoleLines.rbegin(); i != m_consoleLines.rend(); i++)
-            {
-                // Draw line if it is in the viewport
-                if(y > -14 && y < console.height + 14)
-                    hcpui::genString(HCPAlignment::BOTTOM_LEFT, i->first, i->second, 0, y, 14, 0xFFFFFFFF);
-
-                y -= 14;
-            }
-        }
-        console.end();
-
-        HCPInputContext* input = hcpi::get();
-        if(console.isHovered() && input->justScrolled())
-        {
-            if(0 < input->scrollDeltaY()) m_consoleLogScroll++;
-            else m_consoleLogScroll--;
-        }
-        if(console.isHovered() && (input->iskeyPressed(GLFW_KEY_UP) || input->iskeyRepeating(GLFW_KEY_UP))) m_consoleLogScroll++;
-        if(console.isHovered() && (input->iskeyPressed(GLFW_KEY_DOWN) || input->iskeyRepeating(GLFW_KEY_DOWN))) m_consoleLogScroll--;
-
-        m_consoleLogScroll = std::max(0, std::min(m_consoleLogScroll, (int)m_consoleLines.size() - 1));
-    }
-    consoleViewport.end();
 }
 
 void HCPMainMenu::drawJoysticks()
@@ -374,15 +299,6 @@ void HCPMainMenu::handleInput()
         m_robSwivel -= controller.axis(2) * 0.01f;
         m_robClaw += controller.axis(3) * 0.005f;
         m_robClaw = glm::max(-0.5f, glm::min(m_robClaw, 0.37f));
-
-        if(m_timer.ticksPassed())
-        {
-            uint8_t command[2];
-            command[0] = controller.axis(0) < 0.0f;
-            command[1] = glm::abs(controller.axis(0)) * 255;
-
-            m_serial->write(command, 2);
-        }
     }
 
     if(m_manualControlButton.isPressed())
@@ -392,20 +308,17 @@ void HCPMainMenu::handleInput()
         .setText(m_manualControlEnabled && m_manualControlButton.isEnabled() ? "Manual Control: §2On" : "Manual Control: §4Off");
     }
 
-    HCPInputContext* input = hcpi::get();
-    if(m_commandSendButton.isPressed() || (m_consoleCommandField.isFocused() && input->iskeyPressed(GLFW_KEY_ENTER)))
+    if(m_console.commandSendTriggered())
     {
-        if(strcmp(m_consoleCommandField.getText(), "clear") == 0)
+        if(strcmp(m_console.getCommand(), "clear") == 0)
         {
-            m_consoleLogLen = 0;
-            m_consoleLogIndex = 0;
-            m_consoleLog.fill(0);
+            m_console.clearLog();
             return;
         }
 
         char command[512];
-        snprintf(command, 512, "%s\n", m_consoleCommandField.getText());
-        addConsoleLog(command);
+        snprintf(command, 512, "%s\n", m_console.getCommand());
+        m_console.addLog(command);
 
         if(m_serial->isOpen())
             m_serial->write((const uint8_t*) command, strlen(command));
@@ -423,47 +336,9 @@ void HCPMainMenu::handleInput()
             if(bytesRead > 0)
             {
                 buffer[bytesRead] = 0;
-                addConsoleLog(buffer);
+                m_console.addLog(buffer);
             }
         }
-    }
-}
-
-void HCPMainMenu::addConsoleLog(const char* log)
-{
-    int newLogLen = (int) strlen(log);
-
-    for(int i = 0; i < newLogLen; i++)
-    {
-        m_consoleLogIndex = m_consoleLogIndex % (m_consoleLog.size() - 1);
-        m_consoleLog[m_consoleLogIndex] = log[i];
-        m_consoleLogIndex++;
-        m_consoleLogLen++;
-    }
-
-    if(m_consoleLog.size() - 1 < m_consoleLogLen)
-    {
-        std::rotate(m_consoleLog.begin(), m_consoleLog.begin() + m_consoleLogIndex, m_consoleLog.end() - 1);
-
-        m_consoleLogIndex = 0;
-    }
-
-    if(!newLogLen) return;
-
-    const char* line = m_consoleLog.data();
-    size_t lineLen = 0;
-    m_consoleLines.clear();
-    for(int i = 0; i < m_consoleLog.size() - 1; i++)
-    {
-        if(m_consoleLog[i] == '\n' || m_consoleLog[i] == '\r' || m_consoleLog[i] == '\0')
-        {
-            if(lineLen) m_consoleLines.emplace_back(line, lineLen);
-            line = m_consoleLog.data() + i + 1;
-            lineLen = 0;
-
-            if(m_consoleLog[i] == '\0') break;
-        }
-        else lineLen++;
     }
 }
 
@@ -524,4 +399,154 @@ void HCPMainMenu::JoyStickVisual::doDraw()
         joystickArea.end();
     }
     body.end();
+}
+
+HCPMainMenu::Console::Console() :
+    m_scroll(0),
+    m_logLen(0),
+    m_logIndex(0)
+{
+    m_sendButton.setText(">");
+    m_commandField.setTitle("Command");
+}
+
+void HCPMainMenu::Console::addLog(const char* log)
+{
+    int newLogLen = (int) strlen(log);
+
+    for(int i = 0; i < newLogLen; i++)
+    {
+        m_logIndex = m_logIndex % (m_log.size() - 1);
+        m_log[m_logIndex] = log[i];
+        m_logIndex++;
+        m_logLen++;
+    }
+
+    if(m_log.size() - 1 < m_logLen)
+    {
+        std::rotate(m_log.begin(), m_log.begin() + m_logIndex, m_log.end() - 1);
+
+        m_logIndex = 0;
+    }
+
+    if(!newLogLen) return;
+
+    const char* line = m_log.data();
+    size_t lineLen = 0;
+    m_lines.clear();
+    for(int i = 0; i < m_log.size() - 1; i++)
+    {
+        if(m_log[i] == '\n' || m_log[i] == '\r' || m_log[i] == '\0')
+        {
+            if(lineLen) m_lines.emplace_back(line, lineLen);
+            line = m_log.data() + i + 1;
+            lineLen = 0;
+
+            if(m_log[i] == '\0') break;
+        }
+        else lineLen++;
+    }
+}
+
+void HCPMainMenu::Console::clearLog()
+{
+    m_logLen = 0;
+    m_logIndex = 0;
+    m_log.fill(0);
+}
+
+const char* HCPMainMenu::Console::getCommand()
+{
+    return m_commandField.getText();
+}
+
+bool HCPMainMenu::Console::commandSendTriggered()
+{
+    HCPInputContext* input = hcpi::get();
+
+    bool buttonIsPressed = m_sendButton.isPressed();
+    bool enterIsPressed = m_commandField.isFocused() && input->iskeyPressed(GLFW_KEY_ENTER);
+    bool numPadEnterIsPressed = m_commandField.isFocused() && input->iskeyPressed(GLFW_KEY_KP_ENTER);
+    return buttonIsPressed || enterIsPressed || numPadEnterIsPressed;
+}
+
+void HCPMainMenu::Console::doDraw()
+{
+    HCPViewport body;
+    body.width = width;
+    body.height = height;
+    body.x = x;
+    body.y = y;
+
+    body.start(false);
+    {
+        hcpui::genQuad(0, 0, body.width, body.height, 0x22000000);
+
+        HCPViewport header;
+        header.width = body.width;
+        header.height = body.height * 0.15f;
+        float textSize = header.height - edgeSize * 2;
+
+        header.start(false);
+        {
+            hcpui::genQuad(0, 0, header.width, header.height, 0x11000000);
+            hcpui::genString(getText(), edgeSize, edgeSize, textSize, 0xFFFFFFFF);
+        }
+        header.end();
+
+        m_commandField.height = header.height * 0.9f;
+        m_commandField.width = body.width - m_commandField.height;
+        m_commandField.x = m_commandField.height;
+        m_commandField.y = body.height - m_commandField.height;
+
+        m_commandField.draw();
+
+        m_sendButton.width = m_commandField.height;
+        m_sendButton.height = m_commandField.height;
+        m_sendButton.y = m_commandField.y;
+
+        hcpui::genGradientQuad
+        (HCPDirection::BOTTOM, 0, m_commandField.y, m_commandField.height, body.height, 0x88FFFFFF, 0x00FFFFFF);
+
+        m_sendButton.draw();
+
+        m_viewport.width = body.width - edgeSize * 2;
+        m_viewport.height = body.height - header.height - m_commandField.height - edgeSize * 2;
+        m_viewport.x = edgeSize;
+        m_viewport.y = header.height + edgeSize;
+
+        m_viewport.start(true);
+        {
+            float y = m_viewport.height + m_scroll * 14;
+            for(auto i = m_lines.rbegin(); i != m_lines.rend(); i++)
+            {
+                // Draw line if it is in the viewport
+                if(y > -14 && y < m_viewport.height + 14)
+                    hcpui::genString(HCPAlignment::BOTTOM_LEFT, i->first, i->second, 0, y, 14, 0xFFFFFFFF);
+
+                y -= 14;
+            }
+        }
+        m_viewport.end();
+    }
+    body.end();
+
+    handleInput();
+}
+
+void HCPMainMenu::Console::handleInput()
+{
+    HCPInputContext* input = hcpi::get();
+    if(m_viewport.isHovered() && input->justScrolled())
+    {
+        if(0 < input->scrollDeltaY()) m_scroll++;
+        else m_scroll--;
+    }
+
+    if(m_viewport.isHovered() && (input->iskeyPressed(GLFW_KEY_UP) || input->iskeyRepeating(GLFW_KEY_UP)))
+        m_scroll++;
+    if(m_viewport.isHovered() && (input->iskeyPressed(GLFW_KEY_DOWN) || input->iskeyRepeating(GLFW_KEY_DOWN)))
+        m_scroll--;
+
+    m_scroll = std::max(0, std::min(m_scroll, (int)m_lines.size() - 1));
 }

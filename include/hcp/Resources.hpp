@@ -11,7 +11,7 @@ namespace hcpr
 {
     constexpr const char* getAppVersion()
     {
-        return "v0.0.3";
+        return "v0.0.4";
     }
 
     // Images resources

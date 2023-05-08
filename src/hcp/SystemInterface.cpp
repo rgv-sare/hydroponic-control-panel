@@ -119,7 +119,7 @@ HCPPacket::HCPPacket()
 
 HCPPacket::HCPPacket(uint16_t command) :
     m_command(command),
-    m_getPtr(0),
+    m_getPtr(1),
     m_writeable(true)
 {
     m_data.push_back((uint8_t) m_command);
@@ -136,16 +136,18 @@ uint16_t HCPPacket::getCommand() const
     return m_command;
 }
 
-void HCPPacket::putByte(uint8_t byte)
+HCPPacket& HCPPacket::putByte(uint8_t byte)
 {
     uint8_t hex[2];
     i_hexNibblesByte(byte, hex);
 
     m_data.push_back(hex[0]);
     m_data.push_back(hex[1]);
+
+    return *this;
 }
 
-void HCPPacket::putShort(uint16_t word)
+HCPPacket& HCPPacket::putShort(uint16_t word)
 {
     uint8_t hex[4];
     i_hexNibblesWord(word, hex);
@@ -154,9 +156,11 @@ void HCPPacket::putShort(uint16_t word)
     m_data.push_back(hex[1]);
     m_data.push_back(hex[2]);
     m_data.push_back(hex[3]);
+
+    return *this;
 }
 
-void HCPPacket::putInt(uint32_t dword)
+HCPPacket& HCPPacket::putInt(uint32_t dword)
 {
     uint8_t hex[8];
     i_hexNibblesDWord(dword, hex);
@@ -169,9 +173,11 @@ void HCPPacket::putInt(uint32_t dword)
     m_data.push_back(hex[5]);
     m_data.push_back(hex[6]);
     m_data.push_back(hex[7]);
+
+    return *this;
 }
 
-void HCPPacket::putFloat(float fword)
+HCPPacket& HCPPacket::putFloat(float fword)
 {
     uint8_t hex[8];
     i_hexNibblesFWord(fword, hex);
@@ -184,26 +190,28 @@ void HCPPacket::putFloat(float fword)
     m_data.push_back(hex[5]);
     m_data.push_back(hex[6]);
     m_data.push_back(hex[7]);
+
+    return *this;
 }
 
 uint8_t HCPPacket::getByte(size_t index) const
 {
-    return i_byteFromNibbles(&m_data[index * 2]);
+    return i_byteFromNibbles(&m_data[1 + index * 2]);
 }
 
 uint16_t HCPPacket::getShort(size_t index) const
 {
-    return i_wordFromNibbles(&m_data[index * 4]);
+    return i_wordFromNibbles(&m_data[1 + index * 4]);
 }
 
 uint32_t HCPPacket::getInt(size_t index) const
 {
-    return i_dwordFromNibbles(&m_data[index * 8]);
+    return i_dwordFromNibbles(&m_data[1 + index * 8]);
 }
 
 float HCPPacket::getFloat(size_t index) const
 {
-    return i_fwordFromNibbles(&m_data[index * 8]);
+    return i_fwordFromNibbles(&m_data[1 + index * 8]);
 }
 
 uint8_t HCPPacket::getByte() const
@@ -236,12 +244,12 @@ float HCPPacket::getFloat() const
 
 void HCPPacket::resetGetPtr()
 {
-    m_getPtr = 0;
+    m_getPtr = 1;
 }
 
 bool HCPPacket::isEnd() const
 {
-    return m_getPtr >= m_data.size();
+    return m_getPtr >= m_data.size() - 1;
 }
 
 void HCPPacket::setGetPtr(size_t index)
@@ -252,6 +260,12 @@ void HCPPacket::setGetPtr(size_t index)
 size_t HCPPacket::size() const
 {
     return m_data.size();
+}
+
+size_t HCPPacket::dataNumBytes() const
+{
+    if(!m_writeable) return (m_data.size() - 1) / 2;
+    else return (m_data.size() - 2) / 2;
 }
 
 void HCPPacket::end()
@@ -269,9 +283,21 @@ bool HCPPacket::isWriteable() const
 
 #include "hcp/Serial.hpp"
 
+#include <map>
 #include <queue>
 
+typedef void (*ReturnCallback)(HCPPacket& packet);
 static HCPLogger i_logger("SystemInterface");
+
+struct Variable
+{
+    hcpsi::Type type;
+    uint8_t data[256];
+};
+static std::map<std::string, Variable*> i_variablesMap;
+static std::vector<Variable> i_variables;
+static std::map<uint8_t, ReturnCallback> i_pendingReturns;
+static uint8_t i_nextRetId = 0;
 
 static std::unique_ptr<HCPSerial> i_serial;
 static std::string i_statusStr = "Not started";
@@ -279,6 +305,7 @@ static std::string i_statusStr = "Not started";
 static bool i_isAlive = false;
 static bool i_failed = false;
 
+static std::queue<HCPPacket> i_recvQueue;
 static std::queue<HCPPacket> i_sendQueue;
 static std::unique_ptr<std::thread> i_thread;
 
@@ -339,11 +366,219 @@ void hcpsi::send(const HCPPacket& packet)
     }
 }
 
+void hcpsi::processCommand(const HCPPacket& packet)
+{
+    uint16_t command = packet.getCommand();
+
+    switch (command)
+    {
+    case r_noop:
+        break;
+    case r_logstr:
+        break;
+    case r_ret:
+        comr_ret(packet);
+        break;
+    }
+}
+
+HCP_COMS void hcpsi::com_noop()
+{
+    HCPPacket packet(s_noop);
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_echo(const char* str)
+{
+    HCPPacket packet(s_echo);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+
+    while(*str != 0)
+    {
+        packet.putByte(*str);
+        str++;
+    }
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_getbyte(uint16_t varID)
+{
+    HCPPacket packet(s_getbyte);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+    packet.putShort(varID);
+
+    auto onReturn = [] (HCPPacket& packet)
+    {
+        uint16_t varID = packet.getShort();
+        uint8_t value = packet.getByte();
+
+        uint8_t* data = i_variables[varID].data;
+        *data = value;
+    };
+
+    i_pendingReturns[nextRetId] = onReturn;
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_getword(uint16_t varID)
+{
+    HCPPacket packet(s_getword);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+    packet.putShort(varID);
+
+    auto onReturn = [] (HCPPacket& packet)
+    {
+        uint16_t varID = packet.getShort();
+        uint16_t value = packet.getShort();
+
+        uint8_t* data = i_variables[varID].data;
+        *(uint16_t*) data = value;
+    };
+
+    i_pendingReturns[nextRetId] = onReturn;
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_getdword(uint16_t varID)
+{
+    HCPPacket packet(s_getdword);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+    packet.putShort(varID);
+
+    auto onReturn = [] (HCPPacket& packet)
+    {
+        uint16_t varID = packet.getShort();
+        uint32_t value = packet.getInt();
+
+        uint8_t* data = i_variables[varID].data;
+        *(uint32_t*) data = value;
+    };
+
+    i_pendingReturns[nextRetId] = onReturn;
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_getstring(uint16_t varID)
+{
+    HCPPacket packet(s_getstring);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+    packet.putShort(varID);
+
+    auto onReturn = [] (HCPPacket& packet)
+    {
+        uint16_t varID = packet.getShort();
+
+        uint8_t* data = i_variables[varID].data;
+        uint8_t* ptr = data;
+
+        while(!packet.isEnd())
+        {
+            *ptr = packet.getByte();
+            if(*ptr == 0) break;
+            ptr++;
+        }
+    };
+
+    i_pendingReturns[nextRetId] = onReturn;
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMS void hcpsi::com_getvars()
+{
+    HCPPacket packet(s_getvars);
+
+    uint8_t nextRetId = i_nextRetId;
+    i_nextRetId++;
+
+    packet.putByte(nextRetId);
+
+    auto onReturn = [] (HCPPacket& packet)
+    {
+        i_variables.clear();
+        i_variablesMap.clear();
+
+        while(!packet.isEnd())
+        {
+            Variable var;
+            memset(var.data, 0, sizeof(var.data));
+            var.type = (Type) packet.getByte();
+            
+            // Get name
+            std::string name;
+            while(!packet.isEnd())
+            {
+                char c = packet.getByte();
+                if(c == 0) break;
+                name.push_back(c);
+            }
+
+            i_variables.push_back(var);
+            i_variablesMap[name] = &i_variables.back();
+        }
+    };
+
+    i_pendingReturns[nextRetId] = onReturn;
+
+    packet.end();
+
+    send(packet);
+}
+
+HCP_COMR void hcpsi::comr_ret(const HCPPacket& packet)
+{
+    uint8_t retId = packet.getByte();
+    auto it = i_pendingReturns.find(retId);
+    if(it != i_pendingReturns.end())
+    {
+        it->second(const_cast<HCPPacket&>(packet));
+        i_pendingReturns.erase(it);
+    }
+    else i_logger.warnf("Received return with invalid ID %d", retId);
+}
+
 void hcpsi::interfaceThread(const char* port)
 {
     i_statusStr = "Starting on port " + std::string(port);
 
     i_serial = std::make_unique<HCPSerial>(port);
+    i_serial->setTimeout(HCPSerial::Timeout::fromTimeout(5000));
 
     if(i_serial->isOpen()) 
     {
@@ -365,11 +600,68 @@ void hcpsi::interfaceThread(const char* port)
             HCPPacket packet = i_sendQueue.front();
             i_sendQueue.pop();
 
-            i_logger.infof("Sending packet with command %d", packet.getCommand());
-
             i_serial->write(packet.m_data.data(), packet.m_data.size());
         }
 
+        if(i_serial->available())
+        {
+            uint8_t readBuffer[1024];
+            size_t readSize = i_serial->read(readBuffer, 1024);
+
+            for(size_t i = 0; i < readSize; i++)
+            {
+                uint8_t byte = readBuffer[i];
+
+                // New packet
+                if(127 < byte)
+                {
+                    // End last packet if not ended
+                    if(!i_recvQueue.empty() && i_recvQueue.back().isWriteable())
+                        i_recvQueue.back().end();
+
+                    HCPPacket& newPacket = i_recvQueue.emplace(byte);
+
+                    while(i++ < readSize)
+                    {
+                        byte = readBuffer[i];
+
+                        // End of packet
+                        if(byte == 128)
+                        {
+                            newPacket.end();
+                            break;
+                        }
+                        else newPacket.m_data.push_back(byte);
+                    }
+                }
+                // Data byte
+                else if(!i_recvQueue.empty())
+                {
+                    HCPPacket& packet = i_recvQueue.back();
+                        
+                    // End of packet
+                    if(byte == 128)
+                    {
+                        packet.end();
+                        break;
+                    }
+                    else packet.m_data.push_back(byte);
+                }
+            }
+        }
+
+        // Process received packets
+        for(size_t i = 0; i < i_recvQueue.size(); i++)
+        {
+            HCPPacket& packet = i_recvQueue.front();
+
+            if(packet.isEnd())
+            {
+                i_recvQueue.pop();
+
+                processCommand(packet);
+            }
+        }
 
         i_serial->poll();
         // Thread sleep 1/120th of a second

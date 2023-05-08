@@ -4,6 +4,21 @@
 #include <cstdint>
 #include <vector>
 
+// List of commands to the Hydroponics System
+#define s_noop 128
+#define s_echo 129
+#define s_ret 130
+#define s_getbyte 131
+#define s_getword 132
+#define s_getdword 133
+#define s_getstring 134
+#define s_getvars 135
+
+// List of commands from the Hydroponics System
+#define r_noop 128
+#define r_logstr 129
+#define r_ret 130
+
 class HCPPacket
 {
 public:
@@ -13,10 +28,10 @@ public:
     void setCommand(uint16_t command);
     uint16_t getCommand() const;
 
-    void putByte(uint8_t byte);
-    void putShort(uint16_t word);
-    void putInt(uint32_t dword);
-    void putFloat(float fword);
+    HCPPacket& putByte(uint8_t byte);
+    HCPPacket& putShort(uint16_t word);
+    HCPPacket& putInt(uint32_t dword);
+    HCPPacket& putFloat(float fword);
 
     uint8_t getByte(size_t index) const;
     uint16_t getShort(size_t index) const;
@@ -32,6 +47,7 @@ public:
     bool isEnd() const;
     void setGetPtr(size_t index);
     size_t size() const;
+    size_t dataNumBytes() const;
     void end();
     bool isWriteable() const;
 private:
@@ -44,17 +60,45 @@ private:
     friend class hcpsi;
 };
 
+#define HCP_COMS // Marker for commands to the Hydroponics System
+#define HCP_COMR // Marker for commands from the Hydroponics System
+
 class hcpsi
 {
 public:
+    enum Type
+    {
+        BYTE,
+        SHORT,
+        INT,
+        FLOAT,
+        STRING
+    };
+
     static void startOnPort(const char* port);
     static const char* getStatusStr();
     static void stop();
     static bool isAlive();
     static bool failed();
-
-    static void send(const HCPPacket& packet);
 private:
+    static void send(const HCPPacket& packet);
+    static void processCommand(const HCPPacket& packet);
+    
+    // Commands to the Hydroponics System
+    static HCP_COMS void com_noop();
+    static HCP_COMS void com_echo(const char* str);
+    //static HCP_COMS void com_ret(size_t dataSize, const uint8_t* data);
+    static HCP_COMS void com_getbyte(uint16_t varID);
+    static HCP_COMS void com_getword(uint16_t varID);
+    static HCP_COMS void com_getdword(uint16_t varID);
+    static HCP_COMS void com_getstring(uint16_t varID);
+    static HCP_COMS void com_getvars();
+
+    // Commands from the Hydroponics System (to process)
+    static HCP_COMR void comr_logstr(const HCPPacket& packet);
+    static HCP_COMR void comr_ret(const HCPPacket& packet);
+
+
     static void interfaceThread(const char* port);
 };
 

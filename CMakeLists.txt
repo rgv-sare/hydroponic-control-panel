@@ -10,6 +10,9 @@ add_subdirectory("dep/glfw")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory("dep/json")
 
+#Add test projects
+add_subdirectory("tests/SerialInterface")
+
 #Add assimp
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL " " FORCE)
 set(ASSIMP_BUILD_OBJ_IMPORTER ON  CACHE BOOL " " FORCE)

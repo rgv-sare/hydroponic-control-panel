@@ -318,7 +318,7 @@ void hcpsi::startOnPort(const char* port)
     }
 
     i_failed = false;
-    i_thread = std::make_unique<std::thread>(hcpsi::interfaceThread, port);
+    i_thread = std::make_unique<std::thread>([port] { interfaceThread(port); });
 }
 
 const char* hcpsi::getStatusStr()
@@ -328,14 +328,9 @@ const char* hcpsi::getStatusStr()
 
 void hcpsi::stop()
 {
-    if(!i_isAlive)
-    {
-        i_logger.warnf("System interface not started");
-        return;
-    }
-
     i_isAlive = false;
-    i_thread->join();
+
+    if(i_thread.get()) i_thread->join();
     i_thread.reset();
 }
 
@@ -577,12 +572,15 @@ void hcpsi::interfaceThread(const char* port)
 {
     i_statusStr = "Starting on port " + std::string(port);
 
-    i_serial = std::make_unique<HCPSerial>(port);
+    i_serial = std::make_unique<HCPSerial>(port, 115200);
     i_serial->setTimeout(HCPSerial::Timeout::fromTimeout(5000));
+    i_serial->begin();
 
     if(i_serial->isOpen()) 
     {
         i_statusStr = "Initializing system on port " + std::string(port);
+        com_getvars();
+        i_isAlive = true;
     }
     else
     {
@@ -595,6 +593,13 @@ void hcpsi::interfaceThread(const char* port)
 
     while(i_isAlive)
     {
+        if(!i_serial->isOpen())
+        {
+            i_logger.errorf("Serial port closed");
+            i_isAlive = false;
+            break;
+        }
+
         if(!i_sendQueue.empty())
         {
             HCPPacket packet = i_sendQueue.front();

@@ -80,8 +80,10 @@ public:
     static void stop();
     static bool isAlive();
     static bool failed();
-private:
+
+    // Manual interface
     static void send(const HCPPacket& packet);
+private:
     static void processCommand(const HCPPacket& packet);
     
     // Commands to the Hydroponics System

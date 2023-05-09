@@ -35,7 +35,7 @@ HCPMainMenu::HCPMainMenu() :
 HCPMainMenu::HCPMainMenu(const char* comPort) :
     HCPMainMenu()
 {
-    m_serial = new HCPSerial(comPort);
+    m_serial = new HCPSerial(comPort, 115200);
     m_serial->setTimeout(HCPSerial::Timeout::fromTimeout(2000));
 }
 

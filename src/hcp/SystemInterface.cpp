@@ -27,7 +27,7 @@ static inline uint8_t i_nibbleFromHex(uint8_t hex)
 
 static inline void i_hexNibblesByte(uint8_t byte, uint8_t* dst)
 {
-    dst[0] = i_nibbleToHex(0xF0 & byte);
+    dst[0] = i_nibbleToHex((0xF0 & byte) >> 4);
     dst[1] = i_nibbleToHex(0x0F & byte);
 }
 
@@ -110,6 +110,8 @@ static inline float i_fwordFromNibbles(const uint8_t* nibbles)
 
     return *(float*) &dword;
 }
+
+// ----------- HCPPacket ------------ //
 
 HCPPacket::HCPPacket()
     : HCPPacket(128)
@@ -283,19 +285,13 @@ bool HCPPacket::isWriteable() const
 
 #include "hcp/Serial.hpp"
 
-#include <map>
 #include <queue>
 
 typedef void (*ReturnCallback)(HCPPacket& packet);
 static HCPLogger i_logger("SystemInterface");
 
-struct Variable
-{
-    hcpsi::Type type;
-    uint8_t data[256];
-};
-static std::map<std::string, Variable*> i_variablesMap;
-static std::vector<Variable> i_variables;
+std::map<std::string, hcpsi::Variable*> hcpsi::i_variablesMap;
+std::vector<hcpsi::Variable> hcpsi::i_variables;
 static std::map<uint8_t, ReturnCallback> i_pendingReturns;
 static uint8_t i_nextRetId = 0;
 
@@ -342,6 +338,20 @@ bool hcpsi::isAlive()
 bool hcpsi::failed()
 {
     return i_failed;
+}
+
+hcpsi::Type hcpsi::getVariableType(const char* name)
+{
+    auto it = i_variablesMap.find(name);
+    if(it != i_variablesMap.end())
+    {
+        return it->second->type;
+    }
+    else
+    {
+        i_logger.warnf("Variable %s does not exist", name);
+        return Type::BYTE;
+    }
 }
 
 void hcpsi::send(const HCPPacket& packet)
@@ -608,6 +618,7 @@ void hcpsi::interfaceThread(const char* port)
             i_serial->write(packet.m_data.data(), packet.m_data.size());
         }
 
+        // Read serial data to form packets
         if(i_serial->available())
         {
             uint8_t readBuffer[1024];

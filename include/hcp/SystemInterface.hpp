@@ -102,6 +102,8 @@ public:
     static Type getVariableType(const char* name);
 
     // Manual interface
+    static void send(const HCPPacket& packet);
+private:
     struct Variable
     {
         hcpsi::Type type;
@@ -111,8 +113,6 @@ public:
     static std::map<std::string, Variable*> i_variablesMap;
     static std::vector<Variable> i_variables;
 
-    static void send(const HCPPacket& packet);
-private:
     static void processCommand(const HCPPacket& packet);
     
     // Commands to the Hydroponics System

@@ -96,7 +96,7 @@ float HCPFontRenderer::getStringWidth(const char* str, size_t strLen) const
         {
             i++;
         }
-        else
+        else if(m_font.numGlyphs > unicode)
         {
             Glyph glyph = m_font.glyphs[unicode];
 
@@ -213,7 +213,7 @@ void HCPFontRenderer::genString(HCPMeshBuilder& meshBuilder, const char* str, si
 
             i++;
         }
-        else
+        else if(m_font.numGlyphs > unicode)
         {
             Glyph glyph = m_font.glyphs[unicode];
 
@@ -257,7 +257,7 @@ int HCPFontRenderer::charsToFit(const char* str, size_t strLen, float width) con
         {
             i++;
         }
-        else
+        else if(m_font.numGlyphs > unicode)
         {
             Glyph glyph = m_font.glyphs[unicode];
 

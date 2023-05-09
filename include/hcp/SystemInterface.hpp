@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
+#include <string>
 
 // List of commands to the Hydroponics System
 #define s_noop 128
@@ -80,7 +82,34 @@ public:
     static void stop();
     static bool isAlive();
     static bool failed();
+
+    template<typename T>
+    static const T getVariable(const char* name)
+    {
+        auto it = i_variablesMap.find(name);
+        if (it == i_variablesMap.end())
+        {
+            if(typeid(T) == typeid(char*)) return (T)"";
+            return T();
+        }
+
+        Variable* var = it->second;
+
+        if(typeid(T) == typeid(char*)) return (T)var->data;
+        return *(T*)var->data;
+    }
+
+    static Type getVariableType(const char* name);
 private:
+    struct Variable
+    {
+        hcpsi::Type type;
+        uint8_t data[256];
+    };
+
+    static std::map<std::string, Variable*> i_variablesMap;
+    static std::vector<Variable> i_variables;
+
     static void send(const HCPPacket& packet);
     static void processCommand(const HCPPacket& packet);
     
@@ -97,7 +126,6 @@ private:
     // Commands from the Hydroponics System (to process)
     static HCP_COMR void comr_logstr(const HCPPacket& packet);
     static HCP_COMR void comr_ret(const HCPPacket& packet);
-
 
     static void interfaceThread(const char* port);
 };

@@ -299,6 +299,13 @@ void HCPMainMenu::handleInput()
         m_robSwivel -= controller.axis(2) * 0.01f;
         m_robClaw += controller.axis(3) * 0.005f;
         m_robClaw = glm::max(-0.5f, glm::min(m_robClaw, 0.37f));
+
+        uint8_t command[4];
+        command[0] = controller.axis(0) < 0.0f;
+        command[1] = (uint8_t) (glm::abs(controller.axis(0)) * 255.0f);
+        command[2] = controller.axis(2) < 0.0f;
+        command[3] = (uint8_t) (glm::abs(controller.axis(2)) * 255.0f);
+        m_serial->write(command, sizeof(command));
     }
 
     if(m_manualControlButton.isPressed())

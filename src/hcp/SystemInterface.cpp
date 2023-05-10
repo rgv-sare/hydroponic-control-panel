@@ -304,6 +304,8 @@ static uint8_t i_nextRetId = 0;
 
 static std::unique_ptr<HCPSerial> i_serial;
 static std::string i_statusStr = "Not started";
+static std::string i_logStr = "";
+static bool i_clearLog = false;
 
 static bool i_isAlive = false;
 static bool i_failed = false;
@@ -369,6 +371,12 @@ hcpsi::Var& hcpsi::getVariable(const char* name)
     }
 }
 
+std::string& hcpsi::getNextLogStr()
+{
+    i_clearLog = true;
+    return i_logStr;
+}
+
 void hcpsi::send(const HCPPacket& packet)
 {
     if(!i_isAlive)
@@ -400,6 +408,7 @@ void hcpsi::processCommand(const HCPPacket& packet)
     case r_noop:
         break;
     case r_logstr:
+        comr_logstr(packet);
         break;
     case r_ret:
         comr_ret(packet);
@@ -572,6 +581,24 @@ HCP_COMS void hcpsi::com_getvars()
     packet.end();
 
     send(packet);
+}
+
+HCP_COMR void hcpsi::comr_logstr(const HCPPacket& packet)
+{
+    if(i_clearLog)
+    {
+        i_logStr.clear();
+        i_clearLog = false;
+    }
+
+    while(!packet.isEnd())
+    {
+        uint8_t c = packet.getByte();
+        if(c == 0) break;
+        i_logStr.push_back(c);
+    }
+
+    i_clearLog = false;
 }
 
 HCP_COMR void hcpsi::comr_ret(const HCPPacket& packet)

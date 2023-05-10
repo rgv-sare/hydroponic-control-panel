@@ -98,6 +98,7 @@ public:
 
     static std::vector<std::string> getVariables();
     static Var& getVariable(const char* name);
+    static std::string& getNextLogStr();
 
     // Manual interface
     static void send(const HCPPacket& packet);

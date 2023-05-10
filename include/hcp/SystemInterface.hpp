@@ -77,41 +77,32 @@ public:
         STRING
     };
 
+    struct Var
+    {
+        hcpsi::Type type = hcpsi::Type::BYTE;
+        union
+        {
+            uint8_t data[256];
+            uint8_t byte;
+            uint16_t word;
+            uint32_t dword = 0;
+            float fword;
+        }; 
+    };
+
     static void startOnPort(const char* port);
     static const char* getStatusStr();
     static void stop();
     static bool isAlive();
     static bool failed();
 
-    template<typename T>
-    static const T getVariable(const char* name)
-    {
-        auto it = i_variablesMap.find(name);
-        if (it == i_variablesMap.end())
-        {
-            if(typeid(T) == typeid(char*)) return (T)"";
-            return T();
-        }
-
-        Variable* var = it->second;
-
-        if(typeid(T) == typeid(char*)) return (T)var->data;
-        return *(T*)var->data;
-    }
-
-    static Type getVariableType(const char* name);
+    static std::vector<std::string> getVariables();
+    static Var& getVariable(const char* name);
 
     // Manual interface
     static void send(const HCPPacket& packet);
 private:
-    struct Variable
-    {
-        hcpsi::Type type;
-        uint8_t data[256];
-    };
-
-    static std::map<std::string, Variable*> i_variablesMap;
-    static std::vector<Variable> i_variables;
+    static uint8_t getNextRetID(); 
 
     static void processCommand(const HCPPacket& packet);
     

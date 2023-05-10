@@ -35,7 +35,7 @@ static inline void i_hexNibblesWord(uint16_t word, uint8_t* dst)
 {
     uint8_t* wordb = (uint8_t*) &word;
 
-    if(i_isSmallEndian)
+    if(!i_isSmallEndian)
     {
         i_hexNibblesByte(wordb[0], dst);
         i_hexNibblesByte(wordb[1], dst + 2);
@@ -51,7 +51,7 @@ static inline void i_hexNibblesDWord(uint32_t dword, uint8_t* dst)
 {
     uint8_t* dwordb = (uint8_t*) &dword;
 
-    if(i_isSmallEndian)
+    if(!i_isSmallEndian)
     {
         i_hexNibblesByte(dwordb[0], dst);
         i_hexNibblesByte(dwordb[1], dst + 2);
@@ -121,7 +121,7 @@ HCPPacket::HCPPacket()
 
 HCPPacket::HCPPacket(uint16_t command) :
     m_command(command),
-    m_getPtr(1),
+    m_getPtr(0),
     m_writeable(true)
 {
     m_data.push_back((uint8_t) m_command);
@@ -198,22 +198,22 @@ HCPPacket& HCPPacket::putFloat(float fword)
 
 uint8_t HCPPacket::getByte(size_t index) const
 {
-    return i_byteFromNibbles(&m_data[1 + index * 2]);
+    return i_byteFromNibbles(&m_data[1 + index]);
 }
 
 uint16_t HCPPacket::getShort(size_t index) const
 {
-    return i_wordFromNibbles(&m_data[1 + index * 4]);
+    return i_wordFromNibbles(&m_data[1 + index]);
 }
 
 uint32_t HCPPacket::getInt(size_t index) const
 {
-    return i_dwordFromNibbles(&m_data[1 + index * 8]);
+    return i_dwordFromNibbles(&m_data[1 + index]);
 }
 
 float HCPPacket::getFloat(size_t index) const
 {
-    return i_fwordFromNibbles(&m_data[1 + index * 8]);
+    return i_fwordFromNibbles(&m_data[1 + index]);
 }
 
 uint8_t HCPPacket::getByte() const
@@ -246,12 +246,13 @@ float HCPPacket::getFloat() const
 
 void HCPPacket::resetGetPtr()
 {
-    m_getPtr = 1;
+    m_getPtr = 0;
 }
 
 bool HCPPacket::isEnd() const
 {
-    return m_getPtr >= m_data.size() - 1;
+    if(!m_writeable) return m_getPtr >= m_data.size() - 1;
+    else return m_getPtr >= m_data.size() - 2;
 }
 
 void HCPPacket::setGetPtr(size_t index)
@@ -284,14 +285,20 @@ bool HCPPacket::isWriteable() const
 // ----------- hcpsi ------------ //
 
 #include "hcp/Serial.hpp"
+#include "Animation.hpp"
 
 #include <queue>
+#include <functional>
 
-typedef void (*ReturnCallback)(HCPPacket& packet);
+typedef std::function<void(HCPPacket&)> ReturnCallback;
+
 static HCPLogger i_logger("SystemInterface");
 
-std::map<std::string, hcpsi::Variable*> hcpsi::i_variablesMap;
-std::vector<hcpsi::Variable> hcpsi::i_variables;
+static HCPTimer i_varTimer(10.0);
+static std::map<std::string, int> i_variablesMap;
+static std::vector<hcpsi::Var> i_variables;
+static hcpsi::Var i_nullVar;
+
 static std::map<uint8_t, ReturnCallback> i_pendingReturns;
 static uint8_t i_nextRetId = 0;
 
@@ -340,17 +347,25 @@ bool hcpsi::failed()
     return i_failed;
 }
 
-hcpsi::Type hcpsi::getVariableType(const char* name)
+std::vector<std::string> hcpsi::getVariables()
+{
+    std::vector<std::string> vars;
+
+    for(auto& pair : i_variablesMap)
+        vars.push_back(pair.first);
+
+    return vars;
+}
+
+hcpsi::Var& hcpsi::getVariable(const char* name)
 {
     auto it = i_variablesMap.find(name);
     if(it != i_variablesMap.end())
-    {
-        return it->second->type;
-    }
+        return i_variables[it->second];
     else
     {
         i_logger.warnf("Variable %s does not exist", name);
-        return Type::BYTE;
+        return i_nullVar;
     }
 }
 
@@ -369,6 +384,11 @@ void hcpsi::send(const HCPPacket& packet)
         i_sendQueue.back().end();
         i_logger.warnf("Packet must be sent with end()");
     }
+}
+
+uint8_t hcpsi::getNextRetID()
+{
+    return i_nextRetId++;
 }
 
 void hcpsi::processCommand(const HCPPacket& packet)
@@ -419,19 +439,16 @@ HCP_COMS void hcpsi::com_getbyte(uint16_t varID)
 {
     HCPPacket packet(s_getbyte);
 
-    uint8_t nextRetId = i_nextRetId;
-    i_nextRetId++;
+    uint8_t nextRetId = getNextRetID();
 
     packet.putByte(nextRetId);
     packet.putShort(varID);
 
-    auto onReturn = [] (HCPPacket& packet)
+    auto onReturn = [varID] (HCPPacket& packet)
     {
-        uint16_t varID = packet.getShort();
         uint8_t value = packet.getByte();
 
-        uint8_t* data = i_variables[varID].data;
-        *data = value;
+        i_variables[varID].byte = value;
     };
 
     i_pendingReturns[nextRetId] = onReturn;
@@ -445,19 +462,16 @@ HCP_COMS void hcpsi::com_getword(uint16_t varID)
 {
     HCPPacket packet(s_getword);
 
-    uint8_t nextRetId = i_nextRetId;
-    i_nextRetId++;
+    uint8_t nextRetId = getNextRetID();
 
     packet.putByte(nextRetId);
     packet.putShort(varID);
 
-    auto onReturn = [] (HCPPacket& packet)
+    auto onReturn = [varID] (HCPPacket& packet)
     {
-        uint16_t varID = packet.getShort();
         uint16_t value = packet.getShort();
 
-        uint8_t* data = i_variables[varID].data;
-        *(uint16_t*) data = value;
+        i_variables[varID].word = value;
     };
 
     i_pendingReturns[nextRetId] = onReturn;
@@ -471,19 +485,16 @@ HCP_COMS void hcpsi::com_getdword(uint16_t varID)
 {
     HCPPacket packet(s_getdword);
 
-    uint8_t nextRetId = i_nextRetId;
-    i_nextRetId++;
+    uint8_t nextRetId = getNextRetID();
 
     packet.putByte(nextRetId);
     packet.putShort(varID);
 
-    auto onReturn = [] (HCPPacket& packet)
+    auto onReturn = [varID] (HCPPacket& packet)
     {
-        uint16_t varID = packet.getShort();
         uint32_t value = packet.getInt();
 
-        uint8_t* data = i_variables[varID].data;
-        *(uint32_t*) data = value;
+        i_variables[varID].dword = value;
     };
 
     i_pendingReturns[nextRetId] = onReturn;
@@ -497,16 +508,13 @@ HCP_COMS void hcpsi::com_getstring(uint16_t varID)
 {
     HCPPacket packet(s_getstring);
 
-    uint8_t nextRetId = i_nextRetId;
-    i_nextRetId++;
+    uint8_t nextRetId = getNextRetID();
 
     packet.putByte(nextRetId);
     packet.putShort(varID);
 
-    auto onReturn = [] (HCPPacket& packet)
+    auto onReturn = [varID] (HCPPacket& packet)
     {
-        uint16_t varID = packet.getShort();
-
         uint8_t* data = i_variables[varID].data;
         uint8_t* ptr = data;
 
@@ -529,8 +537,7 @@ HCP_COMS void hcpsi::com_getvars()
 {
     HCPPacket packet(s_getvars);
 
-    uint8_t nextRetId = i_nextRetId;
-    i_nextRetId++;
+    uint8_t nextRetId = getNextRetID();
 
     packet.putByte(nextRetId);
 
@@ -538,12 +545,14 @@ HCP_COMS void hcpsi::com_getvars()
     {
         i_variables.clear();
         i_variablesMap.clear();
+        int i = 0;
 
         while(!packet.isEnd())
         {
-            Variable var;
-            memset(var.data, 0, sizeof(var.data));
-            var.type = (Type) packet.getByte();
+            i_variables.emplace_back();
+            i_variables.back().type = (Type) packet.getByte();
+
+            memset(i_variables.back().data, 0, sizeof(Var::data));
             
             // Get name
             std::string name;
@@ -554,8 +563,7 @@ HCP_COMS void hcpsi::com_getvars()
                 name.push_back(c);
             }
 
-            i_variables.push_back(var);
-            i_variablesMap[name] = &i_variables.back();
+            i_variablesMap[name] = i++;
         }
     };
 
@@ -589,8 +597,8 @@ void hcpsi::interfaceThread(const char* port)
     if(i_serial->isOpen()) 
     {
         i_statusStr = "Initializing system on port " + std::string(port);
-        com_getvars();
         i_isAlive = true;
+        com_getvars();
     }
     else
     {
@@ -603,6 +611,7 @@ void hcpsi::interfaceThread(const char* port)
 
     while(i_isAlive)
     {
+        // Check if serial port is open
         if(!i_serial->isOpen())
         {
             i_logger.errorf("Serial port closed");
@@ -610,12 +619,41 @@ void hcpsi::interfaceThread(const char* port)
             break;
         }
 
+        // Send packets in queue
         if(!i_sendQueue.empty())
         {
-            HCPPacket packet = i_sendQueue.front();
-            i_sendQueue.pop();
+            HCPPacket& packet = i_sendQueue.front();
 
             i_serial->write(packet.m_data.data(), packet.m_data.size());
+            i_sendQueue.pop();
+        }
+        
+        // Update variables
+        if(i_varTimer.ticksPassed())
+        {
+            for(int i = 0; i < i_variables.size(); i++)
+            {
+                Var& var = i_variables[i];
+
+                switch (var.type)
+                {
+                case Type::BYTE:
+                    com_getbyte(i);
+                    break;
+                case Type::SHORT:
+                    com_getword(i);
+                    break;
+                case Type::INT:
+                    com_getdword(i);
+                    break;
+                case Type::FLOAT:
+                    com_getdword(i);
+                    break;
+                case Type::STRING:
+                    com_getstring(i);
+                    break;
+                }
+            }
         }
 
         // Read serial data to form packets
@@ -671,11 +709,10 @@ void hcpsi::interfaceThread(const char* port)
         {
             HCPPacket& packet = i_recvQueue.front();
 
-            if(packet.isEnd())
+            if(!packet.isWriteable())
             {
-                i_recvQueue.pop();
-
                 processCommand(packet);
+                i_recvQueue.pop();
             }
         }
 
